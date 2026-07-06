@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -13,6 +14,10 @@ import java.util.Objects;
         }
 )
 public class Follow {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "follower_id", nullable = false)
@@ -27,10 +32,19 @@ public class Follow {
 
     public Follow() {}
 
-    public Follow(User follower, User following, Instant followedAt) {
+    public Follow(UUID id, User follower, User following, Instant followedAt) {
+        this.id = id;
         this.follower = follower;
         this.following = following;
         this.followedAt = followedAt;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public User getFollower() {
