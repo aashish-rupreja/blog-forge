@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "tag")
+@Table(name = "bf_tag")
 public class Tag extends AuditableEntity {
 
     @Column(name = "name", unique = true, nullable = false)

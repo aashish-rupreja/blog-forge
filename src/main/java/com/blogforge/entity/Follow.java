@@ -6,7 +6,7 @@ import jakarta.persistence.Table;
 import java.util.Objects;
 
 @Entity
-@Table(name = "follow")
+@Table(name = "bf_follow")
 public class Follow extends AuditableEntity {
 
     private User follower;

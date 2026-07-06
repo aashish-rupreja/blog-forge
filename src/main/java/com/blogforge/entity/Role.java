@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "role")
+@Table(name = "bf_role")
 public class Role extends AuditableEntity{
 
     @Column(name = "name", nullable = false, unique = true)

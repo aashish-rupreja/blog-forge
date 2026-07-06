@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "reaction")
+@Table(name = "bf_reaction")
 public class Reaction extends AuditableEntity {
 
     private User reactor;

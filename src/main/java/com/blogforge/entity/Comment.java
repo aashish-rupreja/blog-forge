@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 import java.util.Objects;
 
 @Entity
-@Table(name = "comment")
+@Table(name = "bf_comment")
 public class Comment extends AuditableEntity {
 
     private User owner;

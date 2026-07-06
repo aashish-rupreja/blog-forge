@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "author_application")
+@Table(name = "bf_author_application")
 public class AuthorApplication extends AuditableEntity {
 
     private User applicant;
