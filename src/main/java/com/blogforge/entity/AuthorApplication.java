@@ -8,11 +8,15 @@ import java.util.Objects;
 @Table(name = "bf_author_application")
 public class AuthorApplication extends AuditableEntity {
 
+    @ManyToOne
+    @JoinColumn(name = "applicant_id", nullable = false)
     private User applicant;
 
+    @ManyToOne
+    @JoinColumn(name = "application_reviewer_id", nullable = false)
     private User applicationReviewer;
 
-    @Column(name = "application_reason", length = 300)
+    @Column(name = "application_reason", length = 300, nullable = false)
     private String applicationReason;
 
     @Column(name = "status")

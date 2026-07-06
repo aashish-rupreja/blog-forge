@@ -1,8 +1,6 @@
 package com.blogforge.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
@@ -10,11 +8,15 @@ import java.util.Objects;
 @Table(name = "bf_comment")
 public class Comment extends AuditableEntity {
 
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @Column(name = "content")
+    @Column(name = "content", nullable = false)
     private String content;
 
+    @ManyToOne
+    @JoinColumn(name = "blog_id", nullable = false)
     private Blog blog;
 
     public Comment () {}

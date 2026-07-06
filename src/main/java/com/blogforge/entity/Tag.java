@@ -2,6 +2,7 @@ package com.blogforge.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 import java.util.Objects;
@@ -14,6 +15,7 @@ public class Tag extends AuditableEntity {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
+    @ManyToMany(mappedBy = "tags")
     private Set<Blog> blogs;
 
     public Tag () {}

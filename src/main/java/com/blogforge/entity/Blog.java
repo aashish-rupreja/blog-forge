@@ -20,23 +20,40 @@ public class Blog extends AuditableEntity {
     @Column(name = "content", length = 1000)
     private String content;
 
-    // TODO: add relation
+    @ManyToOne
+    @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
     @Column(name = "enable_comments", nullable = false)
     private boolean enableComments;
 
-    @Column(name = "blog_status")
+    @Column(name = "blog_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private BlogStatus status;
 
-    @Column(name = "published_at")
+    @Column(name = "published_at", nullable = false)
     private Instant publishedAt;
 
-    // TODO: add relations
+    @ManyToMany
+    @JoinTable(
+            name = "bf_blog_category",
+            joinColumns = @JoinColumn(name = "blog_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
     private Set<Category> categories = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "bf_blog_tag",
+            joinColumns = @JoinColumn(name = "blog_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
     private Set<Tag> tags = new HashSet<>();
+
+    @OneToMany(mappedBy = "blog")
     private Set<Comment> comments = new HashSet<>();
+
+    @OneToMany(mappedBy = "blog")
     private Set<Reaction> reactions = new HashSet<>();
 
     private Blog () {}

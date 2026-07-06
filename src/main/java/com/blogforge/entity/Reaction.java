@@ -8,11 +8,15 @@ import java.util.Objects;
 @Table(name = "bf_reaction")
 public class Reaction extends AuditableEntity {
 
+    @ManyToOne
+    @JoinColumn(name = "reactor_id", nullable = false)
     private User reactor;
 
+    @ManyToOne
+    @JoinColumn(name = "blog_id", nullable = false)
     private Blog blog;
 
-    @Column(name = "reaction_type")
+    @Column(name = "reaction_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private ReactionType reactionType;
 

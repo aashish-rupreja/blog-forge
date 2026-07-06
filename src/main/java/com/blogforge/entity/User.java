@@ -32,9 +32,21 @@ public class User extends AuditableEntity{
     @Enumerated(EnumType.ORDINAL)
     private UserStatus status;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "bf_user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
     private Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "author")
     private Set<Blog> blogs = new HashSet<>();
+
+    @OneToMany(mappedBy = "owner")
     private Set<Comment> comments = new HashSet<>();
+
+    @OneToMany(mappedBy = "reactor")
     private Set<Reaction> reactions = new HashSet<>();
 
     public User () {}
