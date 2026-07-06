@@ -1,23 +1,36 @@
 package com.blogforge.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.util.Objects;
 
 @Entity
-@Table(name = "bf_follow")
-public class Follow extends AuditableEntity {
+@Table(
+        name = "bf_follow",
+        uniqueConstraints = {
+            @UniqueConstraint(columnNames = {"follower_id", "following_id"})
+        }
+)
+public class Follow {
 
+    @ManyToOne
+    @JoinColumn(name = "follower_id", nullable = false)
     private User follower;
 
+    @ManyToOne
+    @JoinColumn(name = "following_id", nullable = false)
     private User following;
+
+    @Column(name = "followed_at")
+    private Instant followedAt;
 
     public Follow() {}
 
-    public Follow(User follower, User following) {
+    public Follow(User follower, User following, Instant followedAt) {
         this.follower = follower;
         this.following = following;
+        this.followedAt = followedAt;
     }
 
     public User getFollower() {
@@ -34,6 +47,14 @@ public class Follow extends AuditableEntity {
 
     public void setFollowing(User following) {
         this.following = following;
+    }
+
+    public Instant getFollowedAt() {
+        return followedAt;
+    }
+
+    public void setFollowedAt(Instant followedAt) {
+        this.followedAt = followedAt;
     }
 
     @Override
