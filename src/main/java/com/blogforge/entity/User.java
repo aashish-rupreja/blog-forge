@@ -30,10 +30,10 @@ public class User extends AuditableEntity{
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    Set<Role> roles = new HashSet<>();
-    Set<Blog> blogs = new HashSet<>();
-    Set<Comment> comments = new HashSet<>();
-    Set<Reaction> reactions = new HashSet<>();
+    private Set<Role> roles = new HashSet<>();
+    private Set<Blog> blogs = new HashSet<>();
+    private Set<Comment> comments = new HashSet<>();
+    private Set<Reaction> reactions = new HashSet<>();
 
     public User () {}
 
