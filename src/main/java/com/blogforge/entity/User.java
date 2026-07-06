@@ -29,7 +29,7 @@ public class User extends AuditableEntity{
     private String passwordHash;
 
     @Column(name = "status")
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     private UserStatus status;
 
     @ManyToMany(fetch = FetchType.EAGER)
