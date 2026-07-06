@@ -1,8 +1,6 @@
 package com.blogforge.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -29,6 +27,10 @@ public class User extends AuditableEntity{
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.ORDINAL)
+    private UserStatus status;
 
     private Set<Role> roles = new HashSet<>();
     private Set<Blog> blogs = new HashSet<>();
