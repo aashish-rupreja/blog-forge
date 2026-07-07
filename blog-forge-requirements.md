@@ -104,6 +104,7 @@ User
     UUID id
     String firstName
     String lastName
+    String username
     String profilePicLink
     String email
     String passwordHash
@@ -170,8 +171,7 @@ AuditableEntity
     Instant updatedAt
 
 8. REST Endpoints
-User
-
+**User**
 ENDPOINT
 GET /api/v1/users, Allowed to: ADMIN
 
@@ -350,6 +350,37 @@ RESPONSE DTO: USER PROFILE
 
 
 ENDPOINT
+POST /api/v1/users/me/blog, ALLOWED TO: AUTHOR
+
+PURPOSE: CREATE NEW BLOG
+
+REQUEST DTO: BLOG REQUEST
+{
+    "title": "How to fly like Captain America",
+    "content": "First, you need a shield....",
+    "enableComments": true,
+    "blogStatus":"PUBLISHED"
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...]
+},
+
+RESPONSE DTO: BLOG DETAILS
+{
+    "id": "...",
+    "title": "How to fly like Captain America",
+    "slug": "how-to-fly-like-captain-america",
+    "content": "First, you need a shield....",
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...],
+    "publishedOn": "2026-07-06",
+    "likeCount": 10,
+    "dislikeCount": "10",
+    "commentsEnabled":TRUE
+    "pagedComments":{}
+}
+
+
+ENDPOINT
 PUT /api/v1/users/me, ALLOWED TO: USER
 
 PURPOSE: USER INFO UPDATE
@@ -399,6 +430,25 @@ RESPONSE DTO: USER PROFILE
     "blogs": LIST OF BLOG SUMMARY DTOs, EMPTY IF NONE
 }
 
+ENDPOINT
+PATCH /api/v1/users/{id}/roles/{id}, ALLOWED TO: ADMIN
+
+PURPOSE: ASSIGN ROLE TO USER
+
+REQUEST DTO: USER REQUEST
+NA
+
+RESPONSE DTO: USER SUMMARY
+
+ENDPOINT
+DELETE /api/v1/users/{id}/roles/{id}, ALLOWED TO: ADMIN
+
+PURPOSE: REMOVE ROLE FROM USER
+
+REQUEST DTO: USER REQUEST
+NA
+
+RESPONSE DTO: USER SUMMARY
 
 ENDPOINT
 PATCH /api/v1/users/me/password, ALLOWED TO: USER
@@ -429,4 +479,531 @@ NA
 RESPONSE DTO: MESSAGE
 {
     "message":"Profile deleted/scheduled"
+}
+**User**
+
+**Role**
+ENDPOINT
+GET /api/v1/roles ALLOWED TO: ADMIN
+
+PURPOSE: GET ALL ROLES
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: LIST OF ROLE RESPONSE
+[
+    {
+        "name":"ROLE_USER",
+        "holders":[
+            "uuid1","uuid2"....
+        ],
+        "holderCount":10
+    }, {...}, {...}
+]
+
+ENDPOINT
+GET /api/v1/roles/{id} ALLOWED TO: ADMIN
+
+PURPOSE: GET SINGLE ROLES
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: ROLE RESPONSE
+{
+    "name":"ROLE_USER",
+    "holders":[
+        "uuid1","uuid2"....
+    ],
+    "holderCount":10
+}
+
+ENDPOINT
+POST /api/v1/roles/{id} ALLOWED TO: ADMIN
+
+PURPOSE: CREATE NEW ROLE
+
+REQUEST DTO: CREATE ROLE REQUEST
+{
+    "name":"ROLE_NAME"
+}
+
+RESPONSE DTO: ROLE RESPONSE
+{
+    "name":"ROLE_NAME",
+    "holders":[],
+    "holderCount":0
+}
+
+ENDPOINT
+PUT /api/v1/roles/{id} ALLOWED TO: ADMIN
+
+PURPOSE: UPDATE ROLE
+
+REQUEST DTO: UPDATE ROLE REQUEST
+{
+    "name":"ROLE_NAME",
+    "holders":[
+        "uuid1","uuid2"....
+    ]
+}
+
+RESPONSE DTO: ROLE RESPONSE
+{
+    "name":"ROLE_NAME",
+    "holders":[
+        "uuid1","uuid2"....
+    ]
+}
+NOTE: THIS MAY NOT BE NEEDED AT THE MOMENT
+
+ENDPOINT: PATCH /api/v1/roles/{id} ALLOWED TO: ADMIN
+
+PURPOSE: PARTIAL UPDATE ROLE
+
+REQUEST DTO:
+{
+    "name":"ROLE_NAME"
+}
+
+RESPONSE DTO: ROLE RESPONSE
+{
+    "name":"ROLE_NAME",
+    "holders":[
+        "uuid1","uuid2"....
+    ],
+    "holderCount":10
+}
+NOTE: FUNCTIONALITY TO ADD HOLDERS TO ROLE WILL BE ADDED LATER
+
+ENDPOINT: DELETE /api/v1/roles/{id} ALLOWED TO: ADMINS
+
+PURPOSE: DELETE ROLE
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: MESSAGE
+{
+    "message":"Role deleted"
+}
+
+NOTE: A ROLE WILL ONLY BE DELETED IF ITS NOT ASSIGNED TO ANY USER
+
+**Blog**
+ENDPOINT
+GET /api/v1/blogs ALLOWED TO: ANONYMOUS
+
+PURPOSE: FETCH BLOGS
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: LIST OF BLOG SUMMARY
+{
+    "id": "...",
+    "title": "How to fly like Captain America",
+    "slug": "how-to-fly-like-captain-america",
+    "content": "First, you need a shield....",
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...],
+    "publishedOn": "2026-07-06",
+    "likeCount": 10,
+    "dislikeCount": "10",
+    "commentsEnabled":TRUE
+    "commentCount":10
+}
+NOTE: THIS ENDPOINT WILL BE USED FOR CRITERIA SEARCH WITH Possible query params:
+username, category, tag, title, publishedAfter, publishedBefore
+status (admin only), page, size, sort, direction
+
+ENDPOINT
+GET /api/v1/blogs/own ALLOWED TO: AUTHOR
+
+PURPOSE: FETCH OWN BLOGS
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: LIST OF BLOG SUMMARY
+{
+    "id": "...",
+    "title": "How to fly like Captain America",
+    "slug": "how-to-fly-like-captain-america",
+    "content": "First, you need a shield....",
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...],
+    "publishedOn": "2026-07-06",
+    "likeCount": 10,
+    "dislikeCount": "10",
+    "commentsEnabled":TRUE
+    "commentCount":10
+}
+
+ENDPOINT
+GET /api/v1/blogs/{slug} ALLOWED TO: ANONYMOUS
+
+PURPOSE: FETCH SINGLE BLOG
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: BLOG DETAILS
+{
+    "id": "...",
+    "title": "How to fly like Captain America",
+    "slug": "how-to-fly-like-captain-america",
+    "content": "First, you need a shield....",
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...],
+    "publishedOn": "2026-07-06",
+    "likeCount": 10,
+    "dislikeCount": "10",
+    "commentsEnabled":TRUE
+    "commentCount":10
+}
+
+ENDPOINT
+POST /api/v1/blogs ALLOWED TO: AUTHOR
+
+PURPOSE: CREATE NEW BLOG
+
+REQUEST DTO: BLOG REQUEST
+{
+    "title": "How to fly like Captain America",
+    "content": "First, you need a shield....",
+    "enableComments": true,
+    "blogStatus":"DRAFT"
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...]
+},
+
+RESPONSE DTO: BLOG DETAILS
+{
+    "id": "...",
+    "title": "How to fly like Captain America",
+    "slug": "how-to-fly-like-captain-america",
+    "content": "First, you need a shield....",
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...],
+    "publishedOn": "2026-07-06",
+    "likeCount": 10,
+    "dislikeCount": "10",
+    "commentsEnabled":TRUE
+    "pagedComments":{}
+}
+
+ENDPOINT
+PATCH /api/v1/blogs/{slug}/publish ALLOWED TO: AUTHOR
+
+PURPOSE: PUBLISH BLOG
+
+REQUEST DTO: BLOG PUBLISH REQUEST
+{
+    "id": "blogId",
+    "blogStatus": "PUBLISHED"
+}
+
+RESPONSE DTO: BLOG DETAILS
+{
+    "message":"Blog published"
+}
+
+ENDPOINT
+PATCH /api/v1/blogs/{slug}/status ALLOWED TO: AUTHOR
+
+PURPOSE: CHANGE STATUS  BLOG
+
+REQUEST DTO: BLOG PUBLISH REQUEST
+{
+    "id": "blogId",
+    "blogStatus": "..."
+}
+
+RESPONSE DTO: BLOG DETAILS
+{
+    "message":"Blog status changed"
+}
+
+ENDPOINT
+PATCH /api/v1/blog/{slug} ALLOWED TO: AUTHOR
+
+PURPOSE: PARTIAL UPDATE BLOG
+
+REQUEST DTO: BLOG UPDATE REQUEST
+{
+    "title": "How to fly like Captain America",
+    "content": "First, you need a shield....",
+    "enableComments": true,
+    "blogStatus":"PUBLISHED",
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...]
+},
+
+RESPONSE DTO: BLOG DETAILS
+{
+    "id": "...",
+    "title": "How to fly like Captain America",
+    "slug": "how-to-fly-like-captain-america",
+    "content": "First, you need a shield....",
+    "categories": ["Self Help", "Personal Growth"...],
+    "tags": ["captain america", "captain", "america"...],
+    "publishedOn": "2026-07-06",
+    "likeCount": 10,
+    "dislikeCount": "10",
+    "commentsEnabled":TRUE
+    "commentCount":10
+}
+
+ENDPOINT
+GET /api/v1/blogs/{slug}/comments ALLOWED TO: ANONYMOUS
+
+PURPOSE: FETCH COMMENTS OF SINGLE BLOG
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: LIST OF COMMENT REPONSE
+[
+    {
+        "username":"johndoe",
+        "profilePicLink":"...",
+        "content":"commentContent",
+        "commentedOn":"createdAt of comment"
+    }, {...}, {...}
+]
+
+ENDPOINT
+POST /api/v1/blog/{slug}/comments ALLOWED TO: USER
+
+PURPOSE: COMMENT ON BLOG
+
+REQUEST DTO: ADD COMMENT REQUEST
+{
+    "content":"captain america doesn't fly!"
+}
+
+RESPONSE DTO: TBD
+
+ENDPOINT
+PATCH /api/v1/blog/{slug}/me/comments/{id} ALLOWED TO: ONLY USER
+
+PURPOSE: UPDATE COMMENT ON BLOG
+
+REQUEST DTO: UPDATE COMMENT REQUEST
+{
+    "content":"captain america doesn't fly!"
+}
+
+RESPONSE DTO: TBD
+
+ENDPOINT
+DELETE /api/v1/blog/{slug}/me/comments/{id} ALLOWED TO: USER
+
+PURPOSE: UPDATE COMMENT ON BLOG
+
+REQUEST DTO: UPDATE COMMENT REQUEST
+{
+    "content":"captain america doesn't fly!"
+}
+
+RESPONSE DTO: TBD
+
+ENDPOINT
+DELETE /api/v1/blog/{slug}/my/comments/{id} ALLOWED TO: USER
+
+PURPOSE: DELETE COMMENT FROM BLOG
+
+REQUEST DTO: TBD
+
+RESPONSE DTO: TBD
+
+ENDPOINT
+POST /api/v1/blog/{slug}/react ALLOWED TO: USER
+
+PURPOSE: REACT TO BLOG
+
+REQUEST DTO: ADD REACTION REQUEST
+{
+    "reactionType":"LIKE/DISKLIKE"
+}
+
+RESPONSE DTO: TBD
+
+ENDPOINT
+PATCH /api/v1/blog/{slug}/my/react ALLOWED TO: USER
+
+PURPOSE: REACT TO BLOG
+
+REQUEST DTO: ADD REACTION REQUEST
+{
+    "reactionType":"DISLIKE/LIKE"
+}
+
+RESPONSE DTO: TBD
+
+ENDPOINT
+DELETE /api/v1/blog/{slug}/my/react/{id} ALLOWED TO: ONLY USER
+
+PURPOSE: REMOVE REACTION FROM BLOG
+
+REQUEST DTO: REMOVE REACTION REQUEST
+{
+    "reactionType":"LIKE/DISKLIKE"
+}
+
+RESPONSE DTO: TBD
+
+**Comment**
+ENDPOINT
+GET /api/v1/comments ALLOWED TO: ADMIN
+
+PURPOSE: GET ALL COMMENTS
+
+REQUEST DTO
+NA
+
+RESPONSE DTO:
+[
+    {
+        "id":"...",
+        "owner":"userUUID",
+        "content":"commentContent",
+        "blogUUId":"blogUUId"
+        "createdAt":"timestamp",
+        "updatedAt":"timestamp"
+    }
+]
+NOTE: THIS WILL HAVE SEARCH CRITERIA
+
+
+ENDPOINT
+GET /api/v1/comments/blog{slug} ALLOWED TO: AUTHOR
+
+PURPOSE: GET ALL COMMENTS FOR A BLOG
+
+REQUEST DTO
+NA
+
+RESPONSE DTO:
+[
+    {
+        "id":"...",
+        "owner":"username",
+        "content":"commentContent",
+        "createdAt":"timestamp",
+        "updatedAt":"timestamp"
+    }
+]
+NOTE: THIS WILL HAVE SEARCH CRITERIA
+
+
+ENDPOINT
+DELETE /api/v1/comments/{id} ALLOWED TO: AUTHOR
+
+PURPOSE: DELETE COMMENT
+
+REQUEST DTO
+NA
+
+RESPONSE DTO:
+{
+    "message":"comment deleted"
+}
+
+**AuthorApplication**
+ENDPOINT
+GET /api/v1/authorapplications ALLOWED TO: ADMIN
+
+PURPOSE: FETCH ALL APPLICATIONS
+
+REQUEST DTO
+NA
+
+RESPONSE DTO:
+[
+    {
+        "id":"applicationUUID",
+        "applicant":"username",
+        "applicationReason":"applicationReason",
+        "applicationReviewer":"username",
+        "applicationStatus": "PENDING/APPROVED/REJECTED"
+    }
+]
+NOTE: THIS WILL HAVE SEARCH CRITERIA
+
+ENDPOINT
+GET /api/v1/authorapplications/{id} ALLOWED TO: ADMIN
+
+PURPOSE: FETCH ONE APPLICATION
+
+REQUEST DTO
+NA
+
+RESPONSE DTO:
+{
+    "id":"applicationUUID",
+    "applicant":"username",
+    "applicationReason":"applicationReason",
+    "applicationReviewer":"username",
+    "applicationStatus": "PENDING/APPROVED/REJECTED"
+}
+
+ENDPOINT
+GET /api/v1/authorapplications/me ALLOWED TO: USER
+
+PURPOSE: FETCH ONE APPLICATION
+
+REQUEST DTO
+NA
+
+RESPONSE DTO:
+{
+    "id":"applicationUUID",
+    "applicant":"username",
+    "applicationReason":"applicationReason",
+    "applicationReviewer":"username",
+    "applicationStatus": "PENDING/APPROVED/REJECTED"
+}
+
+POST /api/v1/authorapplications ALLOWED TO: USER
+
+PURPOSE: SUBMIT NEW APPLICATION
+
+REQUEST DTO
+{
+    "reason":"reason"
+}
+
+RESPONSE DTO:
+{
+    "id":"applicationUUID",
+    "applicant":"username",
+    "applicationReason":"applicationReason",
+    "applicationReviewer":"username",
+    "applicationStatus": "PENDING/APPROVED/REJECTED"
+}
+
+NOTE: THIS WILL HAVE SEARCH CRITERIA
+
+ENDPOINT
+PATCH /api/v1/authorapplications/{id}/status ALLOWED TO: ADMIN
+
+PURPOSE: UPDATE APPLICATION STATUS
+
+REQUEST DTO
+{
+    "applicationStatus": "PENDING/APPROVED/REJECTED"
+}
+
+RESPONSE DTO:
+{
+    "id":"applicationUUID",
+    "applicant":"username",
+    "applicationReason":"applicationReason",
+    "applicationReviewer":"username",
+    "applicationStatus": "PENDING/APPROVED/REJECTED"
+    "submittedAt":"",
+    "reviewedAt":""
 }
