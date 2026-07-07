@@ -19,6 +19,9 @@ public class User extends AuditableEntity{
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
+
     @Column(name = "profile_pic_link")
     private String profilePicLink;
 
@@ -51,10 +54,11 @@ public class User extends AuditableEntity{
 
     public User () {}
 
-    public User(String firstName, String lastName, String email, String profilePicLink, String bio, String passwordHash, Set<Role> roles, Set<Blog> blogs, Set<Comment> comments, Set<Reaction> reactions) {
+    public User(String firstName, String lastName, String email, String username, String profilePicLink, String bio, String passwordHash, Set<Role> roles, Set<Blog> blogs, Set<Comment> comments, Set<Reaction> reactions) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.username = username;
         this.profilePicLink = profilePicLink;
         this.bio = bio;
         this.passwordHash = passwordHash;
@@ -82,6 +86,22 @@ public class User extends AuditableEntity{
 
     public String getEmail() {
         return email;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 
     public void setEmail(String email) {
