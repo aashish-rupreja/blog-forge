@@ -56,7 +56,7 @@ public class Blog extends AuditableEntity {
     @OneToMany(mappedBy = "blog")
     private Set<Reaction> reactions = new HashSet<>();
 
-    private Blog () {}
+    public Blog () {}
 
     public Blog(String title, String slug, String content, User author, boolean enableComments, BlogStatus status, Set<Category> categories, Set<Tag> tags, Set<Comment> comments, Set<Reaction> reactions) {
         this.title = title;
