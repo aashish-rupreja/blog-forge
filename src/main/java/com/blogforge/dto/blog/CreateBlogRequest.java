@@ -22,7 +22,7 @@ public record CreateBlogRequest(
 
         @NotEmpty(message = "{blog.categoryIds.notEmpty}")
         @Size(min = 1, max = 5, message = "{blog.categoryIds.size}")
-        Set<String> categoryIds,
+        Set<String> categories,
 
         @Size(max = 10, message = "{blog.tags.size}")
         Set<String> tags
