@@ -1,13 +1,11 @@
 package com.blogforge.dto.blog;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.blogforge.entity.BlogStatus;
+import jakarta.validation.constraints.*;
 
 import java.util.Set;
 
-public record BlogRequest(
+public record CreateBlogRequest(
         @NotBlank(message = "{blog.title.notBlank}")
         @Size(min = 5, max = 50, message = "{blog.title.size}")
         String title,
@@ -20,7 +18,7 @@ public record BlogRequest(
         boolean enableComments,
 
         @NotBlank(message = "{blog.blogStatus.notBlank}")
-        String blogStatus,
+        BlogStatus blogStatus,
 
         @NotEmpty(message = "{blog.categoryIds.notEmpty}")
         @Size(min = 1, max = 5, message = "{blog.categoryIds.size}")
