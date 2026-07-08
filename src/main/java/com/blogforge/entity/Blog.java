@@ -17,7 +17,7 @@ public class Blog extends AuditableEntity {
     @Column(name = "slug", nullable = false)
     private String slug;
 
-    @Column(name = "content", length = 1000)
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
     @ManyToOne
