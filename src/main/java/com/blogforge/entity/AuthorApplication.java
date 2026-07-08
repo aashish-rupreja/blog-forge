@@ -16,20 +16,24 @@ public class AuthorApplication extends AuditableEntity {
     @JoinColumn(name = "application_reviewer_id", nullable = false)
     private User applicationReviewer;
 
-    @Column(name = "application_reason", length = 300, nullable = false)
+    @Column(name = "application_reason", length = 500, nullable = false)
     private String applicationReason;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private AuthorApplicationStatus status;
 
+    @Column(name = "reviewer_remarks", length = 100)
+    private String reviewerRemarks;
+
     public AuthorApplication() {}
 
-    public AuthorApplication(User applicant, User applicationReviewer, String applicationReason, AuthorApplicationStatus status) {
+    public AuthorApplication(User applicant, User applicationReviewer, String applicationReason, AuthorApplicationStatus status, String reviewerRemarks) {
         this.applicant = applicant;
         this.applicationReviewer = applicationReviewer;
         this.applicationReason = applicationReason;
         this.status = status;
+        this.reviewerRemarks = reviewerRemarks;
     }
 
     public User getApplicant() {
@@ -62,6 +66,14 @@ public class AuthorApplication extends AuditableEntity {
 
     public void setStatus(AuthorApplicationStatus status) {
         this.status = status;
+    }
+
+    public String getReviewerRemarks() {
+        return reviewerRemarks;
+    }
+
+    public void setReviewerRemarks(String reviewerRemarks) {
+        this.reviewerRemarks = reviewerRemarks;
     }
 
     @Override
