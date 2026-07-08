@@ -227,7 +227,7 @@ RESPONSE DTO: USER SUMMARY
 ]
 
 ENDPOINT
-GET /api/v1/users/{id}/blogs, Allowed to: ANONYMOUS
+GET /api/v1/authors/{username}/blogs, Allowed to: ANONYMOUS
 
 PURPOSE: GET/SEARCH BLOGS OF A SINGLE USER/AUTHOR
 
@@ -250,37 +250,10 @@ RESPONSE DTO: BLOG SUMMARY
     },
     {...}, {...}
 ]
-SHOULD THE ENDPOINT BE:
-/api/v1/authors/{id}/blogs
-
-THIS COULD BE MUCH BETTER
-/api/v1/blogs/search?user={id}
-/api/v1/blogs/search?author={id}
-THE SAME ENDPOINT CAN THEN BE USED IN BLOG SEARCH WITH OTHER CRITERIA
 
 ENDPOINT
-GET /api/v1/users/profile, ALLOWED TO: ADMIN
-
-PURPOSE: MAYBE NONE, WHAT IS THE PURPOSE OF THIS, WHO WANTS A LIST OF ALL USER PROFILES
-
-REQUEST DTO:
-NA
-
-RESPONSE DTO: LIST OF USER PROFILE
-[
-    {
-        "firstName": "john",
-        "lastName": "doe",
-        "profilePicLink": "www.imgur.com/profile/johndoe",
-        "bio": "Hi!, I am John Doe"
-        "joinedOn": "2026-07-06"
-        "blogs": LIST OF BLOG SUMMARY DTOs
-    },
-    {...}, {...}
-]
-
-ENDPOINT
-GET /api/v1/users/{id}/profile, ALLOWED TO: ANONYMOUS
+GET /api/v1/users/{username}/profile, ALLOWED TO: ANONYMOUS
+GET /api/v1/author/{username}/profile, ALLOWED TO: ANONYMOUS
 
 PURPOSE: VIEW A USER/AUTHOR'S PROFILE PAGE
 
@@ -298,9 +271,9 @@ RESPONSE DTO: USER PROFILE
 }
 
 ENDPOINT
-GET /api/v1/users/search, ALLOWED TO: ANONYMOUS
+GET /api/v1/authors/search, ALLOWED TO: ANONYMOUS
 
-PURPOSE: SEARCH FOR OTHER USER/AUTHORS
+PURPOSE: SEARCH FOR AUTHORS
 
 REQUEST DTO:
 NA
@@ -331,26 +304,53 @@ REQUEST DTO: USER REQUEST
 {
     "firstName": "john",
     "lastName": "doe",
+    "username": "johndoe"
     "profilePicLink": "www.imgur.com/profile/johndoe",
     "bio": "Hi!, I am John Doe",
     "email": "john.doe@abc.com",
-    "password": "abc123",
-    "appliedForAuthor": false
+    "password": "abc123"
 }
 
 RESPONSE DTO: USER PROFILE
 {
     "firstName": "john",
     "lastName": "doe",
+    "username":"johndoe"
     "profilePicLink": "www.imgur.com/profile/johndoe",
     "bio": "Hi!, I am John Doe"
     "joinedOn": "2026-07-06"
-    "blogs": LIST OF BLOG SUMMARY DTOs, EMPTY IF NONE
 }
 
 
 ENDPOINT
-POST /api/v1/users/me/blog, ALLOWED TO: AUTHOR
+POST /api/v1/authors/{username}/follow, ALLOWED TO: USERNAME
+
+PURPOSE: FOLLOW AN AUTHOR
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: USER PROFILE
+{
+    "message":"You are now follownig author {username}"
+}
+
+ENDPOINT
+DELETE /api/v1/authors/{username}/follow, ALLOWED TO: USERNAME
+
+PURPOSE: UNFOLLOW AN AUTHOR
+
+REQUEST DTO:
+NA
+
+RESPONSE DTO: USER PROFILE
+{
+    "message":"You are now unfollownig author {username}"
+}
+
+NOT NEEDED
+ENDPOINT
+POST /api/v1/authors/me/blog, ALLOWED TO: AUTHOR
 
 PURPOSE: CREATE NEW BLOG
 
@@ -378,6 +378,7 @@ RESPONSE DTO: BLOG DETAILS
     "commentsEnabled":TRUE
     "pagedComments":{}
 }
+NOT NEEDED
 
 
 ENDPOINT
@@ -431,7 +432,7 @@ RESPONSE DTO: USER PROFILE
 }
 
 ENDPOINT
-PATCH /api/v1/users/{id}/roles/{id}, ALLOWED TO: ADMIN
+PATCH /api/v1/users/{username}/roles/{name}, ALLOWED TO: ADMIN
 
 PURPOSE: ASSIGN ROLE TO USER
 
@@ -441,7 +442,7 @@ NA
 RESPONSE DTO: USER SUMMARY
 
 ENDPOINT
-DELETE /api/v1/users/{id}/roles/{id}, ALLOWED TO: ADMIN
+DELETE /api/v1/users/{username}/roles/{name}, ALLOWED TO: ADMIN
 
 PURPOSE: REMOVE ROLE FROM USER
 
@@ -469,7 +470,7 @@ RESPONSE DTO: MESSAGE
 
 
 ENDPOINT
-POST /api/v1/users/me/delete, ALLOWED TO: USER
+DELETE /api/v1/users/me/delete, ALLOWED TO: USER
 
 PURPOSE: DELETE PROFILE
 
