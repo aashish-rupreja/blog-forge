@@ -1,5 +1,5 @@
 package com.blogforge.entity;
 
 public enum UserStatus {
-    ENABLED, DISABLED
+    ENABLED, DISABLED, DELETION_SCHEDULED
 }
