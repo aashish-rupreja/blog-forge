@@ -2,6 +2,7 @@ package com.blogforge.entity;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.util.Objects;
 
 @Entity
@@ -26,14 +27,18 @@ public class AuthorApplication extends AuditableEntity {
     @Column(name = "reviewer_remarks", length = 100)
     private String reviewerRemarks;
 
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
     public AuthorApplication() {}
 
-    public AuthorApplication(User applicant, User applicationReviewer, String applicationReason, AuthorApplicationStatus status, String reviewerRemarks) {
+    public AuthorApplication(User applicant, User applicationReviewer, String applicationReason, AuthorApplicationStatus status, String reviewerRemarks, Instant reviewedAt) {
         this.applicant = applicant;
         this.applicationReviewer = applicationReviewer;
         this.applicationReason = applicationReason;
         this.status = status;
         this.reviewerRemarks = reviewerRemarks;
+        this.reviewedAt = reviewedAt;
     }
 
     public User getApplicant() {
@@ -74,6 +79,14 @@ public class AuthorApplication extends AuditableEntity {
 
     public void setReviewerRemarks(String reviewerRemarks) {
         this.reviewerRemarks = reviewerRemarks;
+    }
+
+    public Instant getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(Instant reviewedAt) {
+        this.reviewedAt = reviewedAt;
     }
 
     @Override
