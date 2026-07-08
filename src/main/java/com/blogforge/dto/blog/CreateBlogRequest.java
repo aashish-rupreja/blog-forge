@@ -11,7 +11,7 @@ public record CreateBlogRequest(
         String title,
 
         @NotBlank(message = "{blog.content.notBlank}")
-        @Size(min = 100, max = 1000, message = "{blog.content.size}")
+        @Size(min = 100, max = 5000, message = "{blog.content.size}")
         String content,
 
         @NotNull(message = "{blog.enableComments.notNull}")
