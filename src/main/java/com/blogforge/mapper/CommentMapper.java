@@ -22,6 +22,7 @@ public class CommentMapper {
                         c.getUpdatedAt()),
                 c.getOwner().getUsername(),
                 c.getOwner().getProfilePicLink(),
+                c.getContent(),
                 c.getBlog().getSlug()
         );
     }

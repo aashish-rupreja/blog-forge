@@ -8,6 +8,7 @@ public record CommentResponse(
         BaseResponse commonFields,
         String owner,
         String profilePicLink,
+        String comment,
         String blogSlug
 ) {
 }
