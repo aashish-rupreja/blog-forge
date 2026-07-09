@@ -2,6 +2,7 @@ package com.blogforge.dto.blog;
 
 import com.blogforge.dto.BaseResponse;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public record BlogDetailsResponse(
         String content,
         Set<String> categories,
         Set<String> tags,
-        LocalDate publishedOn,
+        Instant publishedOn,
         long likeCount,
         long dislikeCount,
         boolean commentsEnabled,
