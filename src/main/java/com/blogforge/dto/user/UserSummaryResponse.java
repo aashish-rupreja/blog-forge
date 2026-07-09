@@ -6,7 +6,7 @@ import com.blogforge.entity.UserStatus;
 import java.util.Set;
 
 public record UserSummaryResponse(
-        BaseResponse baseResponse,
+        BaseResponse commonFields,
         String firstName,
         String lastName,
         String username,

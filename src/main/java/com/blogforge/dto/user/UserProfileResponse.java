@@ -5,7 +5,7 @@ import com.blogforge.dto.BaseResponse;
 import java.time.LocalDate;
 
 public record UserProfileResponse(
-        BaseResponse baseResponse,
+        BaseResponse commonFields,
         String firstName,
         String lastName,
         String username,

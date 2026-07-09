@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 public record BlogSummaryResponse(
-        BaseResponse baseResponse,
+        BaseResponse commonFields,
         String title,
         String slug,
         Set<String> categories,

@@ -5,7 +5,7 @@ import com.blogforge.dto.BaseResponse;
 import java.util.Set;
 
 public record RoleResponse(
-        BaseResponse baseResponse,
+        BaseResponse commonFields,
         String name,
         Set<String> holders,
         long holderCount

@@ -6,7 +6,7 @@ import com.blogforge.entity.AuthorApplicationStatus;
 import java.time.Instant;
 
 public record AuthorApplicationResponse(
-    BaseResponse baseResponse,
+    BaseResponse commonFields,
     String applicantUsername,
     String applicationReviewerUsername,
     AuthorApplicationStatus status,

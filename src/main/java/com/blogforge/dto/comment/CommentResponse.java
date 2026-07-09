@@ -5,7 +5,7 @@ import com.blogforge.dto.BaseResponse;
 import java.time.LocalDate;
 
 public record CommentResponse(
-        BaseResponse baseResponse,
+        BaseResponse commonFields,
         String owner,
         String profilePicLink,
         String blogSlug
