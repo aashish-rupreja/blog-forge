@@ -1,0 +1,29 @@
+package com.blogforge.controller;
+
+import com.blogforge.dto.user.UserSummaryResponse;
+import com.blogforge.pagination.PagedResponse;
+import com.blogforge.pagination.PaginationRequestParams;
+import com.blogforge.service.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/api/v1/users")
+    public ResponseEntity<PagedResponse<UserSummaryResponse>> getAllUserSummary(@ModelAttribute PaginationRequestParams reqParams) {
+        PagedResponse<UserSummaryResponse> usr = userService.getAllUserSummary(reqParams);
+        return new ResponseEntity<>(usr, HttpStatus.OK);
+    }
+}
