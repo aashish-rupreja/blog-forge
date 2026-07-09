@@ -2,16 +2,17 @@ package com.blogforge.dto.blog;
 
 import com.blogforge.dto.BaseResponse;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.Set;
 
 public record BlogSummaryResponse(
         BaseResponse commonFields,
         String title,
+        String authorUsername,
         String slug,
         Set<String> categories,
         Set<String> tags,
-        LocalDate publishedOn,
+        Instant publishedOn,
         long likeCount,
         long dislikeCount,
         boolean commentsEnabled,
