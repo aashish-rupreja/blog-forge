@@ -14,22 +14,14 @@ public class PagedRequest {
         pageNo = 0;
         pageSize = 5;
         direction = Sort.Direction.ASC;
-        sortBy = "id";
+        sortBy = "uuid";
     }
 
     public PagedRequest(Integer pageNo, Integer pageSize, Sort.Direction direction, String sortBy) {
-        if (pageNo == null || pageNo < 0) { this.pageNo = 0; }
-        else { this.pageNo = pageNo; }
-
-        if (pageSize == null || pageSize < 0) { this.pageSize = 5; }
-        else { this.pageSize = pageSize; }
-
-        if (direction == null) { this.direction = Sort.Direction.ASC; }
-        else if (direction != Sort.Direction.ASC && direction != Sort.Direction.DESC) { this.direction = Sort.Direction.ASC; }
-        else { this.direction = Sort.Direction.ASC; }
-
-        if (sortBy == null) { this.sortBy = "uuid"; }
-        else { this.sortBy = sortBy; }
+        this.pageNo = pageNo;
+        this.pageSize = pageSize;
+        this.direction = direction;
+        this.sortBy = sortBy;
     }
 
     public static Pageable getJPAPageRequest(PagedRequest pr) {
@@ -39,6 +31,25 @@ public class PagedRequest {
                 pr.getDirection(),
                 pr.getsortBy()
         );
+    }
+
+    public static PagedRequest initWithDefaultsIfAnyInvalid(PaginationRequestParams params) {
+        PagedRequest pr = new PagedRequest();
+        if (params.pageNo() == null || params.pageNo() <= 0) { pr.setPageNo(0); }
+        else { pr.setPageNo(params.pageNo() - 1); }
+
+        if (params.pageSize() == null || params.pageSize() < 5) { pr.setPageSize(5); }
+        else { pr.setPageNo(params.pageNo()); }
+
+        if (params.sortDirection() == null ||
+                (params.sortDirection() != Sort.Direction.ASC && params.sortDirection() != Sort.Direction.DESC))
+        { pr.setDirection(Sort.Direction.ASC); }
+        else { pr.setDirection(params.sortDirection()); }
+
+        if(params.sortBy() == null) { pr.setsortBy("uuid"); }
+        else { pr.setsortBy(params.sortBy()); }
+
+        return pr;
     }
 
     public Integer getPageNo() {

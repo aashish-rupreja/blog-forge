@@ -25,12 +25,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public PagedResponse<UserSummaryResponse> getAllUserSummary(PaginationRequestParams reqParams) {
-        PagedRequest pr = new PagedRequest(
-                reqParams.pageNo()-1,
-                reqParams.pageSize(),
-                reqParams.sortDirection(),
-                reqParams.sortBy()
-        );
+        PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
         Page<User> users = userRepository.findAll(jpaPageable);
         return new PagedResponse<>(
