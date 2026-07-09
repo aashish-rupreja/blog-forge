@@ -44,7 +44,7 @@ public class BlogSpecification {
             public @Nullable Predicate toPredicate(Root<Blog> blogTable, CriteriaQuery<?> query, CriteriaBuilder queryBuilder) {
                 return queryBuilder.greaterThan(
                         blogTable.get("publishedAt"),
-                        LocalDate.parse(publishedAfter)
+                        LocalDate.parse(publishedAfter).plusDays(1)
                 );
             }
         };
@@ -57,6 +57,19 @@ public class BlogSpecification {
                 return queryBuilder.lessThan(
                         blogTable.get("publishedAt"),
                         LocalDate.parse(publishedBefore)
+                );
+            }
+        };
+    }
+
+    public static Specification<Blog> publishedOn(String publishedOn) {
+        return new Specification<Blog>() {
+            @Override
+            public @Nullable Predicate toPredicate(Root<Blog> blogTable, CriteriaQuery<?> query, CriteriaBuilder queryBuilder) {
+                return queryBuilder.between(
+                        blogTable.get("publishedAt"),
+                        LocalDate.parse(publishedOn),
+                        LocalDate.parse(publishedOn).plusDays(1)
                 );
             }
         };
@@ -94,6 +107,9 @@ public class BlogSpecification {
         }
         if(specParams.publishedBefore() != null) {
             spec = spec.and(publishedBefore(specParams.publishedBefore()));
+        }
+        if(specParams.publishedOn() != null) {
+            spec = spec.and(publishedOn(specParams.publishedOn()));
         }
         if(specParams.categories() != null && !specParams.categories().isEmpty()) {
             spec = spec.and(categoriesIn(specParams.categories()));

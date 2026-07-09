@@ -8,6 +8,7 @@ public record BlogSpecificationParams(
         Set<String> categories,
         Set<String> tags,
         String publishedAfter,
-        String publishedBefore
+        String publishedBefore,
+        String publishedOn
 ) {
 }
