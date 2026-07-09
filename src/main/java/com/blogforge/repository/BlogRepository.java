@@ -2,8 +2,9 @@ package com.blogforge.repository;
 
 import com.blogforge.entity.Blog;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.UUID;
 
-public interface BlogRepository extends JpaRepository<Blog, UUID> {
+public interface BlogRepository extends JpaRepository<Blog, UUID>, JpaSpecificationExecutor<Blog> {
 }
