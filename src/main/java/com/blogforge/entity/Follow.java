@@ -17,7 +17,7 @@ public class Follow {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID uuid;
 
     @ManyToOne
     @JoinColumn(name = "follower_id", nullable = false)
@@ -32,19 +32,19 @@ public class Follow {
 
     public Follow() {}
 
-    public Follow(UUID id, User follower, User following, Instant followedAt) {
-        this.id = id;
+    public Follow(UUID uuid, User follower, User following, Instant followedAt) {
+        this.uuid = uuid;
         this.follower = follower;
         this.following = following;
         this.followedAt = followedAt;
     }
 
-    public UUID getId() {
-        return id;
+    public UUID getUuid() {
+        return uuid;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 
     public User getFollower() {
