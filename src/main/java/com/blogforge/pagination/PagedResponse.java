@@ -7,16 +7,18 @@ public class PagedResponse<T> {
     private Integer pageNo;
     private Integer pageSize;
     private Integer totalPages;
+    private long totalElements;
     private boolean isEmpty;
     private boolean hasNext;
 
     public PagedResponse() {}
 
-    public PagedResponse(Collection<T> content, Integer pageNo, Integer pageSize, Integer totalPages, boolean isEmpty, boolean hasNext) {
+    public PagedResponse(Collection<T> content, Integer pageNo, Integer pageSize, Integer totalPages, long totalElements, boolean isEmpty, boolean hasNext) {
         this.content = content;
         this.pageNo = pageNo;
         this.pageSize = pageSize;
         this.totalPages = totalPages;
+        this.totalElements = totalElements;
         this.isEmpty = isEmpty;
         this.hasNext = hasNext;
     }
@@ -51,6 +53,14 @@ public class PagedResponse<T> {
 
     public void setTotalPages(Integer totalPages) {
         this.totalPages = totalPages;
+    }
+
+    public long getTotalElements() {
+        return totalElements;
+    }
+
+    public void setTotalElements(long totalElements) {
+        this.totalElements = totalElements;
     }
 
     public boolean isEmpty() {
