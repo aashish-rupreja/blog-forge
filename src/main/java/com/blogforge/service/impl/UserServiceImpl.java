@@ -8,8 +8,11 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.UserRepository;
 import com.blogforge.service.UserService;
+import com.blogforge.specification.user.UserSpecification;
+import com.blogforge.specification.user.UserSpecificationParams;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,15 +27,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PagedResponse<UserSummaryResponse> getAllUserSummary(PaginationRequestParams reqParams) {
+    public PagedResponse<UserSummaryResponse> getAllUserSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
-        Page<User> users = userRepository.findAll(jpaPageable);
+        Specification<User> userSpec = UserSpecification.handleSpecs(specParams);
+        Page<User> users = userRepository.findAll(userSpec, jpaPageable);
         return new PagedResponse<>(
                 users.getContent().stream().map(userMapper::fromEntityToSummaryResponse).toList(),
                 users.getNumber()+1,
                 users.getNumberOfElements(),
                 users.getTotalPages(),
+                users.getTotalElements(),
                 users.isEmpty(),
                 users.hasNext()
         );

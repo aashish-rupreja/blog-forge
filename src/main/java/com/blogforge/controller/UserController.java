@@ -4,6 +4,7 @@ import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.UserService;
+import com.blogforge.specification.user.UserSpecificationParams;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,8 +23,12 @@ public class UserController {
     }
 
     @GetMapping("/api/v1/users")
-    public ResponseEntity<PagedResponse<UserSummaryResponse>> getAllUserSummary(@ModelAttribute PaginationRequestParams reqParams) {
-        PagedResponse<UserSummaryResponse> usr = userService.getAllUserSummary(reqParams);
+    public ResponseEntity<PagedResponse<UserSummaryResponse>> getAllUserSummary(
+            @ModelAttribute PaginationRequestParams reqParams,
+            @ModelAttribute UserSpecificationParams specParams
+    ) {
+        System.out.println(specParams);
+        PagedResponse<UserSummaryResponse> usr = userService.getAllUserSummary(reqParams, specParams);
         return new ResponseEntity<>(usr, HttpStatus.OK);
     }
 }
