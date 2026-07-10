@@ -16,6 +16,7 @@ public class TagMapper {
     }
 
     public TagResponse fromEntityToResponse(Tag t) {
+        long blogCount = (t.getBlogs() != null) ? t.getBlogs().size() : 0;
         return new TagResponse(
                 new BaseResponse(
                         t.getUuid(),
@@ -23,7 +24,7 @@ public class TagMapper {
                         t.getUpdatedAt()
                 ),
                 t.getName(),
-                t.getBlogs().size()
+                blogCount
         );
     }
 }
