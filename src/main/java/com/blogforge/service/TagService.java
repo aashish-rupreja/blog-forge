@@ -7,4 +7,6 @@ import com.blogforge.pagination.PaginationRequestParams;
 public interface TagService {
 
     PagedResponse<TagResponse> getAll(PaginationRequestParams reqParams, String tagName);
+
+    TagResponse getByName(String tagName);
 }

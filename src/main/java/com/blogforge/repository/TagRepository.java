@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TagRepository extends JpaRepository<Tag, UUID> {
@@ -19,4 +20,6 @@ public interface TagRepository extends JpaRepository<Tag, UUID> {
             nativeQuery = true
     )
     Page<Tag> findByNameContaining(Pageable pageable, String name);
+
+    Optional<Tag> findByNameIgnoreCase(String tagName);
 }

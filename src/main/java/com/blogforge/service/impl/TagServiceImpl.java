@@ -2,6 +2,8 @@ package com.blogforge.service.impl;
 
 import com.blogforge.dto.tag.TagResponse;
 import com.blogforge.entity.Tag;
+import com.blogforge.exception.MessageResolver;
+import com.blogforge.exception.EntityNotFoundException;
 import com.blogforge.mapper.TagMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
@@ -12,17 +14,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-
 @Service
 public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
     private final TagMapper tagMapper;
+    private final MessageResolver messageResolver;
 
-    public TagServiceImpl(TagRepository tagRepository, TagMapper tagMapper) {
+    public TagServiceImpl(TagRepository tagRepository, TagMapper tagMapper, MessageResolver messageResolver) {
         this.tagRepository = tagRepository;
         this.tagMapper = tagMapper;
+        this.messageResolver = messageResolver;
     }
 
     @Override
@@ -46,5 +48,14 @@ public class TagServiceImpl implements TagService {
                 tags.isEmpty(),
                 tags.hasNext()
         );
+    }
+
+    @Override
+    public TagResponse getByName(String tagName) {
+        Tag t = tagRepository.findByNameIgnoreCase(tagName)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageResolver.getMessage("entity.not-found", "Tag", tagName)
+                ));
+        return tagMapper.fromEntityToResponse(t);
     }
 }
