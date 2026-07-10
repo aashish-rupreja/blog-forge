@@ -1,9 +1,11 @@
 package com.blogforge.controller;
 
+import com.blogforge.dto.tag.CreateTagRequest;
 import com.blogforge.dto.tag.TagResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.TagService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,5 +32,11 @@ public class TagController {
     public ResponseEntity<TagResponse> getByName(@PathVariable String name) {
         TagResponse tr = tagService.getByName(name);
         return new ResponseEntity<>(tr, HttpStatus.OK);
+    }
+
+    @PostMapping("/api/v1/tags")
+    public ResponseEntity<TagResponse> create(@Valid @RequestBody CreateTagRequest tagRequest) {
+        TagResponse tr = tagService.create(tagRequest);
+        return new ResponseEntity<>(tr, HttpStatus.CREATED);
     }
 }

@@ -1,7 +1,9 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.dto.tag.CreateTagRequest;
 import com.blogforge.dto.tag.TagResponse;
 import com.blogforge.entity.Tag;
+import com.blogforge.exception.EntityAlreadyExistsException;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.exception.EntityNotFoundException;
 import com.blogforge.mapper.TagMapper;
@@ -10,12 +12,19 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.TagRepository;
 import com.blogforge.service.TagService;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class TagServiceImpl implements TagService {
+
+    private final Logger LOG = LoggerFactory.getLogger(TagServiceImpl.class);
 
     private final TagRepository tagRepository;
     private final TagMapper tagMapper;
@@ -57,5 +66,21 @@ public class TagServiceImpl implements TagService {
                         messageResolver.getMessage("entity.not-found", "Tag", tagName)
                 ));
         return tagMapper.fromEntityToResponse(t);
+    }
+
+    @Override
+    @Transactional
+    public TagResponse create(CreateTagRequest tagRequest) {
+        LOG.debug("Attempting to create Tag \"{}\"", tagRequest.name());
+        Optional<Tag> t = tagRepository.findByNameIgnoreCase(tagRequest.name());
+        if(t.isPresent()) {
+            LOG.debug("Tag \"{}\" already exists", tagRequest.name());
+            throw new EntityAlreadyExistsException(messageResolver.getMessage(
+                    "entity.already-exists",
+                    "Tag", tagRequest.name()));
+        }
+        Tag saved = tagRepository.save(tagMapper.fromCreateRequestToEntity(tagRequest));
+        LOG.debug("Tag \"{}\" created", tagRequest.name());
+        return tagMapper.fromEntityToResponse(saved);
     }
 }
