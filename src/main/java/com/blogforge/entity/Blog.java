@@ -31,7 +31,7 @@ public class Blog extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     private BlogStatus status;
 
-    @Column(name = "published_at", nullable = false)
+    @Column(name = "published_at")
     private Instant publishedAt;
 
     @ManyToMany
