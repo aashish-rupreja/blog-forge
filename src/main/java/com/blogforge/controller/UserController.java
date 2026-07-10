@@ -27,7 +27,6 @@ public class UserController {
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute UserSpecificationParams specParams
     ) {
-        System.out.println(specParams);
         PagedResponse<UserSummaryResponse> usr = userService.getAllUserSummary(reqParams, specParams);
         return new ResponseEntity<>(usr, HttpStatus.OK);
     }
