@@ -22,6 +22,18 @@ public class UserSpecification {
         };
     }
 
+    public static Specification<User> hasRole(String roleName) {
+        return new Specification<User>() {
+            @Override
+            public @Nullable Predicate toPredicate(Root<User> userTable, CriteriaQuery<?> query, CriteriaBuilder queryBuilder) {
+                return queryBuilder.equal(
+                        userTable.join("roles").get("name"),
+                        roleName
+                );
+            }
+        };
+    }
+
     public static Specification<User> handleSpecs(UserSpecificationParams specParams) {
         Specification<User> userSpec = Specification.unrestricted();
         if(specParams.username() != null) {
