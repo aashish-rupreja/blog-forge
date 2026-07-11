@@ -2,6 +2,7 @@ package com.blogforge.controller;
 
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.role.CreateRoleRequest;
+import com.blogforge.dto.role.DeleteRoleRequest;
 import com.blogforge.dto.role.RoleResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
@@ -45,6 +46,12 @@ public class RoleController {
     @DeleteMapping(path = "/api/v1/roles/{name}")
     public ResponseEntity<GenericResponse> deleteOne(@PathVariable String name) {
         GenericResponse gr = roleService.deleteOne(name);
+        return new ResponseEntity<>(gr, HttpStatus.OK);
+    }
+
+    @DeleteMapping(path = "/api/v1/roles")
+    public ResponseEntity<GenericResponse> deleteAllIn(@Valid @RequestBody DeleteRoleRequest roles) {
+        GenericResponse gr = roleService.deleteAllIn(roles);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }

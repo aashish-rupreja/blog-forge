@@ -2,10 +2,13 @@ package com.blogforge.service;
 
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.role.CreateRoleRequest;
+import com.blogforge.dto.role.DeleteRoleRequest;
 import com.blogforge.dto.role.RoleResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.role.RoleSpecificationParams;
+
+import java.util.Set;
 
 public interface RoleService {
 
@@ -16,4 +19,6 @@ public interface RoleService {
     RoleResponse create(CreateRoleRequest dto);
 
     GenericResponse deleteOne(String roleName);
+
+    GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleReq);
 }

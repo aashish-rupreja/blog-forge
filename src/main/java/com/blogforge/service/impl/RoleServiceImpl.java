@@ -2,6 +2,7 @@ package com.blogforge.service.impl;
 
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.role.CreateRoleRequest;
+import com.blogforge.dto.role.DeleteRoleRequest;
 import com.blogforge.dto.role.RoleResponse;
 import com.blogforge.entity.Role;
 import com.blogforge.exception.MessageResolver;
@@ -15,6 +16,7 @@ import com.blogforge.specification.role.RoleSpecification;
 import com.blogforge.specification.role.RoleSpecificationParams;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -22,8 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.Locale;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class RoleServiceImpl implements RoleService {
@@ -48,7 +51,7 @@ public class RoleServiceImpl implements RoleService {
         Page<Role> roles = roleRepository.findAll(roleSpecs, jpaPageable);
         return new PagedResponse<>(
                 roles.stream().map(roleMapper::fromEntityToResponse).toList(),
-                roles.getNumber()+1,
+                roles.getNumber() + 1,
                 roles.getNumberOfElements(),
                 roles.getTotalPages(),
                 roles.getTotalElements(),
@@ -61,7 +64,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponse getByName(String name) {
         LOG.debug("Attempting to find Role \"{}\"", name);
         Optional<Role> r = roleRepository.findByNameIgnoreCase(name);
-        if(r.isEmpty()) {
+        if (r.isEmpty()) {
             String notFoundMessage = messageResolver.getMessage("entity.not-found", "Role", name);
             LOG.debug(notFoundMessage);
             throw new EntityNotFoundException(notFoundMessage);
@@ -75,11 +78,11 @@ public class RoleServiceImpl implements RoleService {
         LOG.debug("Attempting to create Role \"{}\"", dto.name());
 
         String roleName = dto.name().toUpperCase();
-        if(!roleName.startsWith("ROLE")) roleName = "ROLE_"+roleName;
+        if (!roleName.startsWith("ROLE")) roleName = "ROLE_" + roleName;
         CreateRoleRequest normalized = new CreateRoleRequest(roleName);
 
         Optional<Role> r = roleRepository.findByNameIgnoreCase(normalized.name());
-        if(r.isPresent()) {
+        if (r.isPresent()) {
             String alreadyExistsMessage = messageResolver.getMessage("entity.already-exists", "Role", roleName);
             LOG.debug(alreadyExistsMessage);
             throw new EntityExistsException(alreadyExistsMessage);
@@ -94,7 +97,7 @@ public class RoleServiceImpl implements RoleService {
     public GenericResponse deleteOne(String roleName) {
         LOG.debug("Attempting to delete Role \"{}\"", roleName);
         Optional<Role> r = roleRepository.findByNameIgnoreCase(roleName);
-        if(r.isEmpty()) {
+        if (r.isEmpty()) {
             String notExistsMessage = messageResolver.getMessage("entity.not-found", "Role", roleName);
             LOG.debug(notExistsMessage);
             throw new EntityNotFoundException(notExistsMessage);
@@ -103,5 +106,32 @@ public class RoleServiceImpl implements RoleService {
         String deleted = "Role \"##\" deleted".replaceAll("##", roleName);
         LOG.debug(deleted);
         return new GenericResponse(deleted);
+    }
+
+    @Override
+    @Transactional
+    public GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleReq) {
+        Set<String> normalized = new HashSet<>();
+        for(String name : deleteRoleReq.roles()) {
+            normalized.add(normalizeRoleName(name));
+        }
+        LOG.debug("Attempting to delete Roles {}", normalized.toString());
+
+        if (normalized.isEmpty()) {
+            String msg = "No roles provided to delete";
+            LOG.debug(msg);
+            return new GenericResponse(msg);
+        }
+
+        long deletedCount = roleRepository.deleteAllIn(normalized);
+        String msg =  String.valueOf(deletedCount)+" roles deleted";
+        LOG.debug(msg);
+        return new GenericResponse(msg);
+    }
+
+    private String normalizeRoleName(String name) {
+        name = name.toUpperCase();
+        if(!name.startsWith("ROLE")) name = "ROLE_"+name;
+        return name;
     }
 }
