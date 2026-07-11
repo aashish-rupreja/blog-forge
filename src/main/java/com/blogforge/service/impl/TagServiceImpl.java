@@ -3,9 +3,7 @@ package com.blogforge.service.impl;
 import com.blogforge.dto.tag.CreateTagRequest;
 import com.blogforge.dto.tag.TagResponse;
 import com.blogforge.entity.Tag;
-import com.blogforge.exception.EntityAlreadyExistsException;
 import com.blogforge.exception.MessageResolver;
-import com.blogforge.exception.EntityNotFoundException;
 import com.blogforge.mapper.TagMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
@@ -18,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
 
 import java.util.Optional;
 
@@ -75,7 +75,7 @@ public class TagServiceImpl implements TagService {
         Optional<Tag> t = tagRepository.findByNameIgnoreCase(tagRequest.name());
         if(t.isPresent()) {
             LOG.debug("Tag \"{}\" already exists", tagRequest.name());
-            throw new EntityAlreadyExistsException(messageResolver.getMessage(
+            throw new EntityExistsException(messageResolver.getMessage(
                     "entity.already-exists",
                     "Tag", tagRequest.name()));
         }

@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -44,8 +46,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(er, httpStatus);
     }
 
-    @ExceptionHandler(EntityAlreadyExistsException.class)
-    public ResponseEntity<ExceptionResponse> handleEntityAlreadyExistsException(EntityAlreadyExistsException e, HttpServletRequest req) {
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<ExceptionResponse> handleExistsException(EntityExistsException e, HttpServletRequest req) {
         HttpStatus httpStatus = HttpStatus.CONFLICT;
         ExceptionResponse er = new ExceptionResponse(
                 Instant.now(),
