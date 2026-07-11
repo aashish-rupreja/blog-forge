@@ -1,7 +1,9 @@
 package com.blogforge.controller;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.category.CategoryResponse;
 import com.blogforge.dto.category.CreateCategoryRequest;
+import com.blogforge.dto.category.DeleteCategoryRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.CategoryService;
@@ -39,5 +41,11 @@ public class CategoryController {
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CreateCategoryRequest dto) {
         CategoryResponse cr = categoryService.create(dto);
         return new ResponseEntity<>(cr, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping(path = "/api/v1/categories")
+    public ResponseEntity<GenericResponse> delete(@Valid @RequestBody DeleteCategoryRequest dto) {
+        GenericResponse gr = categoryService.delete(dto);
+        return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }

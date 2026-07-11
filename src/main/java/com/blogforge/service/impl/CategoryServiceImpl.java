@@ -1,7 +1,9 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.category.CategoryResponse;
 import com.blogforge.dto.category.CreateCategoryRequest;
+import com.blogforge.dto.category.DeleteCategoryRequest;
 import com.blogforge.entity.Category;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.mapper.CategoryMapper;
@@ -86,5 +88,20 @@ public class CategoryServiceImpl implements CategoryService {
         Category saved = categoryRepository.save(categoryMapper.fromCreateRequestToEntity(dto));
         LOG.debug("Category \"{}\" created", dto.name());
         return categoryMapper.fromEntityToResponse(saved);
+    }
+
+    @Override
+    public GenericResponse delete(DeleteCategoryRequest dto) {
+        LOG.debug("Attempting to delete Category \"{}\"", dto.name());
+        Optional<Category> c = categoryRepository.findByNameIgnoreCase(dto.name());
+        if(c.isEmpty()) {
+            String notExistsMessage = messageResolver.getMessage("entity.not-found", "Category",dto.name());
+            LOG.debug(notExistsMessage);
+            throw new EntityNotFoundException(notExistsMessage);
+        }
+        categoryRepository.delete(c.get());
+        String deleteMessage = "Category \"##\" deleted".replace("##", dto.name());
+        LOG.debug(deleteMessage);
+        return new GenericResponse(deleteMessage);
     }
 }
