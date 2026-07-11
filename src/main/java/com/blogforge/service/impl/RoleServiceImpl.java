@@ -1,5 +1,6 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.dto.role.CreateRoleRequest;
 import com.blogforge.dto.role.RoleResponse;
 import com.blogforge.entity.Role;
 import com.blogforge.exception.MessageResolver;
@@ -11,6 +12,7 @@ import com.blogforge.repository.RoleRepository;
 import com.blogforge.service.RoleService;
 import com.blogforge.specification.role.RoleSpecification;
 import com.blogforge.specification.role.RoleSpecificationParams;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -64,5 +67,25 @@ public class RoleServiceImpl implements RoleService {
         }
         LOG.debug("Role \"{}\" found", name);
         return roleMapper.fromEntityToResponse(r.get());
+    }
+
+    @Override
+    public RoleResponse create(CreateRoleRequest dto) {
+        LOG.debug("Attempting to create Role \"{}\"", dto.name());
+
+        String roleName = dto.name().toUpperCase();
+        if(!roleName.startsWith("ROLE")) roleName = "ROLE_"+roleName;
+        CreateRoleRequest normalized = new CreateRoleRequest(roleName);
+
+        Optional<Role> r = roleRepository.findByNameIgnoreCase(normalized.name());
+        if(r.isPresent()) {
+            String alreadyExistsMessage = messageResolver.getMessage("entity.already-exists", "Role", roleName);
+            LOG.debug(alreadyExistsMessage);
+            throw new EntityExistsException(alreadyExistsMessage);
+        }
+
+        Role saved = roleRepository.save(roleMapper.fromCreateRequestToEntity(normalized));
+        LOG.debug("Role \"{}\" created", roleName);
+        return roleMapper.fromEntityToResponse(saved);
     }
 }

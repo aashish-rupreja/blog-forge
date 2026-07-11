@@ -1,5 +1,6 @@
 package com.blogforge.service;
 
+import com.blogforge.dto.role.CreateRoleRequest;
 import com.blogforge.dto.role.RoleResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
@@ -10,4 +11,6 @@ public interface RoleService {
     PagedResponse<RoleResponse> getAll(PaginationRequestParams reqParams, RoleSpecificationParams specParams);
 
     RoleResponse getByName(String name);
+
+    RoleResponse create(CreateRoleRequest dto);
 }
