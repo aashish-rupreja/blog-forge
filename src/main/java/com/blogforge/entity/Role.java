@@ -1,9 +1,6 @@
 package com.blogforge.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -26,6 +23,10 @@ public class Role extends AuditableEntity{
         this.holders = holders;
     }
 
+    @Column(name = "role_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private RoleType roleType;
+
     public String getName() {
         return name;
     }
@@ -40,6 +41,14 @@ public class Role extends AuditableEntity{
 
     public void setHolders(Set<User> holders) {
         this.holders = holders;
+    }
+
+    public RoleType getRoleType() {
+        return roleType;
+    }
+
+    public void setRoleType(RoleType roleType) {
+        this.roleType = roleType;
     }
 
     @Override
