@@ -15,13 +15,14 @@ public class CategoryMapper {
     }
 
     public CategoryResponse fromEntityToResponse(Category c) {
+        long blogCount = (c.getBlogs() != null) ? c.getBlogs().size() : 0;
         return new CategoryResponse(
                 new BaseResponse(
                         c.getUuid(),
                         c.getCreatedAt(),
                         c.getUpdatedAt()),
                 c.getName(),
-                c.getBlogs().size()
+                blogCount
         );
     }
 }
