@@ -1,5 +1,6 @@
 package com.blogforge.dto.role;
 
+import com.blogforge.entity.RoleType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -11,6 +12,9 @@ public record CreateRoleRequest(
                 regexp = "^[A-Za-z]+$",
                 message = "{role.name.pattern}"
         )
-        String name
+        String name,
+
+        @NotBlank(message = "{role.type.blank}")
+        RoleType roleType
 ) {
 }

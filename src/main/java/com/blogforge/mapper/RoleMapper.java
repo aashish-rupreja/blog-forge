@@ -16,6 +16,7 @@ public class RoleMapper {
     public Role fromCreateRequestToEntity(CreateRoleRequest dto) {
         Role r = new Role();
         r.setName(dto.name());
+        r.setRoleType(dto.roleType());
         return r;
     }
 
@@ -30,6 +31,7 @@ public class RoleMapper {
                         r.getCreatedAt(),
                         r.getUpdatedAt()),
                 r.getName(),
+                r.getRoleType(),
                 holders,
                 holders.size()
         );

@@ -77,9 +77,8 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponse create(CreateRoleRequest dto) {
         LOG.debug("Attempting to create Role \"{}\"", dto.name());
 
-        String roleName = dto.name().toUpperCase();
-        if (!roleName.startsWith("ROLE")) roleName = "ROLE_" + roleName;
-        CreateRoleRequest normalized = new CreateRoleRequest(roleName);
+        String roleName = normalizeRoleName(dto.name());
+        CreateRoleRequest normalized = new CreateRoleRequest(roleName, dto.roleType());
 
         Optional<Role> r = roleRepository.findByNameIgnoreCase(normalized.name());
         if (r.isPresent()) {
