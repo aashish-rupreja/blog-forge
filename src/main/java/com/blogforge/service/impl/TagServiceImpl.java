@@ -1,6 +1,8 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.tag.CreateTagRequest;
+import com.blogforge.dto.tag.DeleteTagRequest;
 import com.blogforge.dto.tag.TagResponse;
 import com.blogforge.entity.Tag;
 import com.blogforge.exception.MessageResolver;
@@ -82,5 +84,20 @@ public class TagServiceImpl implements TagService {
         Tag saved = tagRepository.save(tagMapper.fromCreateRequestToEntity(tagRequest));
         LOG.debug("Tag \"{}\" created", tagRequest.name());
         return tagMapper.fromEntityToResponse(saved);
+    }
+
+    @Override
+    public GenericResponse delete(DeleteTagRequest tagRequest) {
+        LOG.debug("Attempting to delete Tag \"{}\"", tagRequest.name());
+        Optional<Tag> t = tagRepository.findByNameIgnoreCase(tagRequest.name());
+        if(t.isEmpty()) {
+            String notExistsMessage = messageResolver.getMessage("entity.not-found", "Tag",tagRequest.name());
+            LOG.debug(notExistsMessage);
+            throw new EntityNotFoundException(notExistsMessage);
+        }
+        tagRepository.delete(t.get());
+        String deleteMessage = "Tag \"##\" deleted".replace("##", tagRequest.name());
+        LOG.debug(deleteMessage);
+        return new GenericResponse(deleteMessage);
     }
 }

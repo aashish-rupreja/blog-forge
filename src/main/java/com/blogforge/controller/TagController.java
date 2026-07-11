@@ -1,6 +1,9 @@
 package com.blogforge.controller;
 
+import com.blogforge.dto.GenericResponse;
+import com.blogforge.dto.category.DeleteCategoryRequest;
 import com.blogforge.dto.tag.CreateTagRequest;
+import com.blogforge.dto.tag.DeleteTagRequest;
 import com.blogforge.dto.tag.TagResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
@@ -38,5 +41,11 @@ public class TagController {
     public ResponseEntity<TagResponse> create(@Valid @RequestBody CreateTagRequest tagRequest) {
         TagResponse tr = tagService.create(tagRequest);
         return new ResponseEntity<>(tr, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping(path = "/api/v1/tags")
+    public ResponseEntity<GenericResponse> delete(@Valid @RequestBody DeleteTagRequest dto) {
+        GenericResponse gr = tagService.delete(dto);
+        return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }
