@@ -8,4 +8,6 @@ import com.blogforge.specification.role.RoleSpecificationParams;
 public interface RoleService {
 
     PagedResponse<RoleResponse> getAll(PaginationRequestParams reqParams, RoleSpecificationParams specParams);
+
+    RoleResponse getByName(String name);
 }
