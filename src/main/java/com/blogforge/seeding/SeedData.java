@@ -56,11 +56,11 @@ public class SeedData implements CommandLineRunner {
 
             Role authorRole = new Role();
             authorRole.setName("ROLE_AUTHOR");
-            userRole.setRoleType(RoleType.SYSTEM);
+            authorRole.setRoleType(RoleType.SYSTEM);
 
             Role adminRole = new Role();
             adminRole.setName("ROLE_ADMIN");
-            userRole.setRoleType(RoleType.SYSTEM);
+            adminRole.setRoleType(RoleType.SYSTEM);
 
             Set<Role> seedRoles = Set.of(userRole, authorRole, adminRole);
             roleRepository.deleteAll(seedRoles);
