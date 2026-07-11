@@ -1,5 +1,6 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.role.CreateRoleRequest;
 import com.blogforge.dto.role.RoleResponse;
 import com.blogforge.entity.Role;
@@ -87,5 +88,20 @@ public class RoleServiceImpl implements RoleService {
         Role saved = roleRepository.save(roleMapper.fromCreateRequestToEntity(normalized));
         LOG.debug("Role \"{}\" created", roleName);
         return roleMapper.fromEntityToResponse(saved);
+    }
+
+    @Override
+    public GenericResponse deleteOne(String roleName) {
+        LOG.debug("Attempting to delete Role \"{}\"", roleName);
+        Optional<Role> r = roleRepository.findByNameIgnoreCase(roleName);
+        if(r.isEmpty()) {
+            String notExistsMessage = messageResolver.getMessage("entity.not-found", "Role", roleName);
+            LOG.debug(notExistsMessage);
+            throw new EntityNotFoundException(notExistsMessage);
+        }
+        roleRepository.delete(r.get());
+        String deleted = "Role \"##\" deleted".replaceAll("##", roleName);
+        LOG.debug(deleted);
+        return new GenericResponse(deleted);
     }
 }

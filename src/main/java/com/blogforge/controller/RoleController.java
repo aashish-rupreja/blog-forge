@@ -42,9 +42,9 @@ public class RoleController {
         return new ResponseEntity<>(rr, HttpStatus.CREATED);
     }
 
-    @DeleteMapping(path = "/api/v1/roles")
-    public ResponseEntity<GenericResponse> delete(@Valid @RequestBody DeleteRoleRequest dto) {
-        GenericResponse gr = roleService.delete(dto);
+    @DeleteMapping(path = "/api/v1/roles/{name}")
+    public ResponseEntity<GenericResponse> deleteOne(@PathVariable String name) {
+        GenericResponse gr = roleService.deleteOne(name);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }
