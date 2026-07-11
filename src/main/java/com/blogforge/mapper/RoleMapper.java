@@ -6,6 +6,8 @@ import com.blogforge.entity.Role;
 import com.blogforge.entity.User;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -18,14 +20,18 @@ public class RoleMapper {
     }
 
     public RoleResponse fromEntityToResponse(Role r) {
+        Set<String> holders = (r.getHolders() != null)
+                ? r.getHolders().stream().map(User::getUsername).collect(Collectors.toSet())
+                : new HashSet<>();
+
         return new RoleResponse(
                 new BaseResponse(
                         r.getUuid(),
                         r.getCreatedAt(),
                         r.getUpdatedAt()),
                 r.getName(),
-                r.getHolders().stream().map(User::getUsername).collect(Collectors.toSet()),
-                r.getHolders().size()
+                holders,
+                holders.size()
         );
     }
 }
