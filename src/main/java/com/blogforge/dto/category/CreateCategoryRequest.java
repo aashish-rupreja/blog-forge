@@ -9,7 +9,7 @@ public record CreateCategoryRequest(
         @NotBlank(message = "{category.name.blank}")
         @Size(min = 3, max = 15, message = "{category.name.size}")
         @Pattern(
-                regexp = "^[A-Za-z]+$",
+                regexp = "^[A-Za-z\\s]+$",
                 message = "{category.name.pattern}"
         )
         String name
