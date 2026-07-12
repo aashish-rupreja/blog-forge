@@ -40,7 +40,7 @@ public class UserController {
     @PostMapping(path = "/api/v1/users")
     public ResponseEntity<UserProfileResponse> create(@Valid @RequestBody CreateUserRequest dto) {
         UserProfileResponse upr = userService.create(dto);
-        return new ResponseEntity<>(upr, HttpStatus.OK);
+        return new ResponseEntity<>(upr, HttpStatus.CREATED);
     }
 
     @PatchMapping(path = "/api/v1/users/{username}")
