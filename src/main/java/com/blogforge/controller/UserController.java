@@ -1,6 +1,7 @@
 package com.blogforge.controller;
 
 import com.blogforge.dto.user.CreateUserRequest;
+import com.blogforge.dto.user.UpdateUserRequest;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.pagination.PagedResponse;
@@ -39,6 +40,12 @@ public class UserController {
     @PostMapping(path = "/api/v1/users")
     public ResponseEntity<UserProfileResponse> create(@Valid @RequestBody CreateUserRequest dto) {
         UserProfileResponse upr = userService.create(dto);
+        return new ResponseEntity<>(upr, HttpStatus.OK);
+    }
+
+    @PatchMapping(path = "/api/v1/users/{username}")
+    public ResponseEntity<UserProfileResponse> partialUpdate(@PathVariable String username, @Valid @RequestBody UpdateUserRequest dto) {
+        UserProfileResponse upr = userService.partialUpdate(username, dto);
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 }

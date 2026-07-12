@@ -1,6 +1,7 @@
 package com.blogforge.service;
 
 import com.blogforge.dto.user.CreateUserRequest;
+import com.blogforge.dto.user.UpdateUserRequest;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.pagination.PagedResponse;
@@ -16,4 +17,6 @@ public interface UserService {
     UserProfileResponse getUserProfile(String username);
 
     UserProfileResponse create(CreateUserRequest dto);
+
+    UserProfileResponse partialUpdate(String username, UpdateUserRequest dto);
 }

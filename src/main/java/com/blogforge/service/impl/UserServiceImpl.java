@@ -1,6 +1,7 @@
 package com.blogforge.service.impl;
 
 import com.blogforge.dto.user.CreateUserRequest;
+import com.blogforge.dto.user.UpdateUserRequest;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.entity.Role;
@@ -116,6 +117,45 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(u);
 
         LOG.info("User \"{}\" created", saved.getUsername());
+        return userMapper.fromEntityToProfileResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse partialUpdate(String username, UpdateUserRequest dto) {
+        LOG.info("Attempting to update User \"{}\"", username);
+
+        Optional<User> check = userRepository.findByUsernameIgnoreCase(username);
+        if(check.isEmpty()) {
+            String notFound = messageResolver.getMessage("entity.not-found", "User with username", username);
+            LOG.warn(notFound);
+            throw new EntityNotFoundException(notFound);
+        }
+
+        User toUpdate = check.get();
+        if(dto.firstName() != null) {
+            LOG.debug("Updating firstName from {} to {}", toUpdate.getFirstName(), dto.firstName());
+            toUpdate.setFirstName(dto.firstName());
+        }
+        if(dto.lastName() != null) {
+            LOG.debug("Updating lastName from {} to {}", toUpdate.getLastName(), dto.lastName());
+            toUpdate.setLastName(dto.lastName());
+        }
+        if(dto.username() != null) {
+            LOG.debug("Updating username from {} to {}", toUpdate.getUsername(), dto.username());
+            toUpdate.setUsername(dto.username());
+        }
+        if(dto.profilePicLink() != null) {
+            LOG.debug("Updating profilePicLink from {} to {}", toUpdate.getProfilePicLink(), dto.profilePicLink());
+            toUpdate.setProfilePicLink(dto.profilePicLink());
+        }
+        if(dto.bio() != null) {
+            LOG.debug("Updating bio from {} to {}", toUpdate.getBio(), dto.bio());
+            toUpdate.setBio(dto.bio());
+        }
+
+        User saved = userRepository.save(toUpdate);
+        LOG.info("User \"{}\" updated", dto.username());
         return userMapper.fromEntityToProfileResponse(saved);
     }
 }
