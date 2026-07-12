@@ -41,9 +41,9 @@ public class UserController {
         return new ResponseEntity<>(upr, HttpStatus.CREATED);
     }
 
-    @PatchMapping(path = "/api/v1/users/{username}")
-    public ResponseEntity<UserProfileResponse> partialUpdate(@PathVariable String username, @Valid @RequestBody UpdateUserRequest dto) {
-        UserProfileResponse upr = userService.partialUpdate(username, dto);
+    @PatchMapping(path = "/api/v1/users/me/profile")
+    public ResponseEntity<UserProfileResponse> partialUpdate(@Valid @RequestBody UpdateUserRequest dto) {
+        UserProfileResponse upr = userService.partialUpdate(dto);
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 

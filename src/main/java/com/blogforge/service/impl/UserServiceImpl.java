@@ -122,12 +122,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserProfileResponse partialUpdate(String username, UpdateUserRequest dto) {
-        LOG.info("Attempting to update User \"{}\"", username);
+    public UserProfileResponse partialUpdate(UpdateUserRequest dto) {
+        String authenticatedUsername = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
-        Optional<User> check = userRepository.findByUsernameIgnoreCase(username);
+        LOG.info("Attempting to update User \"{}\"", authenticatedUsername);
+
+        Optional<User> check = userRepository.findByUsernameIgnoreCase(authenticatedUsername);
         if(check.isEmpty()) {
-            String notFound = messageResolver.getMessage("entity.not-found", "User with username", username);
+            String notFound = messageResolver.getMessage("entity.not-found", "User with username", authenticatedUsername);
             LOG.warn(notFound);
             throw new EntityNotFoundException(notFound);
         }

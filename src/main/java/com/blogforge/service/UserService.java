@@ -16,7 +16,7 @@ public interface UserService {
 
     UserProfileResponse create(CreateUserRequest dto);
 
-    UserProfileResponse partialUpdate(String username, UpdateUserRequest dto);
+    UserProfileResponse partialUpdate(UpdateUserRequest dto);
 
     GenericResponse changePassword(ChangePasswordRequest dto);
 }
