@@ -2,13 +2,17 @@ package com.blogforge.service.impl;
 
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
+import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.entity.Blog;
+import com.blogforge.entity.Comment;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.mapper.BlogMapper;
+import com.blogforge.mapper.CommentMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.BlogRepository;
+import com.blogforge.repository.CommentRepository;
 import com.blogforge.service.BlogService;
 import com.blogforge.specification.blog.BlogSpecification;
 import com.blogforge.specification.blog.BlogSpecificationParams;
@@ -26,12 +30,21 @@ public class BlogServiceImpl implements BlogService {
     private final Logger LOG = LoggerFactory.getLogger(BlogServiceImpl.class);
 
     private final BlogRepository blogRepository;
+    private final CommentRepository commentRepository;
     private final BlogMapper blogMapper;
+    private final CommentMapper commentMapper;
     private final MessageResolver messageResolver;
 
-    public BlogServiceImpl(BlogRepository blogRepository, BlogMapper blogMapper, MessageResolver messageResolver) {
+    public BlogServiceImpl(
+            BlogRepository blogRepository,
+            CommentRepository commentRepository,
+            BlogMapper blogMapper,
+            CommentMapper commentMapper,
+            MessageResolver messageResolver) {
         this.blogRepository = blogRepository;
+        this.commentRepository = commentRepository;
         this.blogMapper = blogMapper;
+        this.commentMapper = commentMapper;
         this.messageResolver = messageResolver;
     }
 
@@ -61,6 +74,23 @@ public class BlogServiceImpl implements BlogService {
                 )));
 
         return blogMapper.fromEntityToDetailsResponse(b);
+    }
+
+    @Override
+    public PagedResponse<CommentResponse> getBlogComments(String slug, PaginationRequestParams requestParams) {
+        PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(requestParams);
+        Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
+        Page<Comment> comments = commentRepository.findByBlog_Slug(slug, jpaPageable);
+
+        return new PagedResponse<>(
+                comments.stream().map(commentMapper::fromEntityToResponse).toList(),
+                comments.getNumber()+1,
+                comments.getSize(),
+                comments.getTotalPages(),
+                comments.getTotalElements(),
+                comments.isEmpty(),
+                comments.hasNext()
+        );
     }
 
 

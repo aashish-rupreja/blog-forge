@@ -2,6 +2,7 @@ package com.blogforge.controller;
 
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
+import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.BlogService;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 public class BlogController {
@@ -37,5 +40,14 @@ public class BlogController {
     public ResponseEntity<BlogDetailsResponse> getBlogDetails(@PathVariable String slug) {
         BlogDetailsResponse bdr = blogService.getBlogDetails(slug);
         return new ResponseEntity<>(bdr, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/v1/blogs/{slug}/comments")
+    public ResponseEntity<PagedResponse<CommentResponse>> getBlogComments(
+            @PathVariable String slug,
+            @ModelAttribute PaginationRequestParams reqParams
+            ) {
+        PagedResponse<CommentResponse> comments = blogService.getBlogComments(slug, reqParams);
+        return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 }
