@@ -6,14 +6,12 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UpdateUserRequest(
-        @NotBlank(message = "{user.firstName.notBlank}")
         @Size(min = 3, max = 20, message = "{user.firstName.size}")
         String firstName,
 
         @Size(max = 20, message = "{user.lastName.size}")
         String lastName,
 
-        @NotBlank(message = "{user.username.notBlank}")
         @Size(min = 3, max = 10, message = "{user.username.size}")
         @Pattern(
                 regexp = "^[A-Za-z0-9_]+$",
