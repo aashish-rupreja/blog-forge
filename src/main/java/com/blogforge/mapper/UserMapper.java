@@ -21,7 +21,7 @@ public class UserMapper {
         u.setFirstName(dto.firstName());
         u.setLastName(dto.lastName());
         u.setEmail(dto.email());
-        u.setUsername(dto.username());
+        u.setUsername(dto.username().toLowerCase());
         u.setProfilePicLink(dto.profilePicLink());
         u.setBio(dto.bio());
         u.setPasswordHash(dto.password());
