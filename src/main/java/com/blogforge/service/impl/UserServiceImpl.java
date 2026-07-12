@@ -1,12 +1,11 @@
 package com.blogforge.service.impl;
 
-import com.blogforge.dto.user.CreateUserRequest;
-import com.blogforge.dto.user.UpdateUserRequest;
-import com.blogforge.dto.user.UserProfileResponse;
-import com.blogforge.dto.user.UserSummaryResponse;
+import com.blogforge.dto.GenericResponse;
+import com.blogforge.dto.user.*;
 import com.blogforge.entity.Role;
 import com.blogforge.entity.User;
 import com.blogforge.exception.MessageResolver;
+import com.blogforge.exception.PasswordMismatchException;
 import com.blogforge.mapper.UserMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
@@ -157,5 +156,37 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(toUpdate);
         LOG.info("User \"{}\" updated", dto.username());
         return userMapper.fromEntityToProfileResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public GenericResponse changePassword(String username, ChangePasswordRequest dto) {
+        LOG.info("Attempting password update for User \"{}\"", username);
+
+        Optional<User> check = userRepository.findByUsernameIgnoreCase(username);
+        if(check.isEmpty()) {
+            String notFound = messageResolver.getMessage("entity.not-found", "User with username", username);
+            LOG.warn(notFound);
+            throw new EntityNotFoundException(notFound);
+        }
+
+        User u = check.get();
+        if(!passwordEncoder.matches(dto.oldPassword(), u.getPasswordHash())) {
+            String oldPassMismatch = messageResolver.getMessage("user.password.mismatch-old");
+            LOG.warn(oldPassMismatch);
+            throw new PasswordMismatchException(oldPassMismatch);
+        }
+
+        if(!dto.newPassword().equals(dto.confirmNewPassword())) {
+            String newPassMismatch = messageResolver.getMessage("user.password.mismatch-new-confirm");
+            LOG.warn(newPassMismatch);
+            throw new PasswordMismatchException(newPassMismatch);
+        }
+
+        u.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        User saved = userRepository.save(u);
+        String pwChanged = messageResolver.getMessage("user.password.changed");
+        LOG.info(pwChanged);
+        return new GenericResponse(pwChanged);
     }
 }

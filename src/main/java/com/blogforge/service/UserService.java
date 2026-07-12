@@ -1,9 +1,7 @@
 package com.blogforge.service;
 
-import com.blogforge.dto.user.CreateUserRequest;
-import com.blogforge.dto.user.UpdateUserRequest;
-import com.blogforge.dto.user.UserProfileResponse;
-import com.blogforge.dto.user.UserSummaryResponse;
+import com.blogforge.dto.GenericResponse;
+import com.blogforge.dto.user.*;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.user.UserSpecificationParams;
@@ -19,4 +17,6 @@ public interface UserService {
     UserProfileResponse create(CreateUserRequest dto);
 
     UserProfileResponse partialUpdate(String username, UpdateUserRequest dto);
+
+    GenericResponse changePassword(String username, ChangePasswordRequest dto);
 }

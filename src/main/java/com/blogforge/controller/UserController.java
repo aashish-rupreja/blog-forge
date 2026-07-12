@@ -1,9 +1,7 @@
 package com.blogforge.controller;
 
-import com.blogforge.dto.user.CreateUserRequest;
-import com.blogforge.dto.user.UpdateUserRequest;
-import com.blogforge.dto.user.UserProfileResponse;
-import com.blogforge.dto.user.UserSummaryResponse;
+import com.blogforge.dto.GenericResponse;
+import com.blogforge.dto.user.*;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.UserService;
@@ -47,5 +45,11 @@ public class UserController {
     public ResponseEntity<UserProfileResponse> partialUpdate(@PathVariable String username, @Valid @RequestBody UpdateUserRequest dto) {
         UserProfileResponse upr = userService.partialUpdate(username, dto);
         return new ResponseEntity<>(upr, HttpStatus.OK);
+    }
+
+    @PatchMapping(path = "/api/v1/users/{username}/password")
+    public ResponseEntity<GenericResponse> changePassword(@PathVariable String username, @Valid @RequestBody ChangePasswordRequest dto) {
+        GenericResponse gr = userService.changePassword(username, dto);
+        return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }
