@@ -25,10 +25,6 @@ public record UpdateUserRequest(
         String profilePicLink,
 
         @Size(max = 255, message = "{user.bio.size}")
-        String bio,
-
-        @NotBlank(message = "{user.email.notBlank}")
-        @Email(message = "{user.email.invalid}")
-        String email
+        String bio
 ) {
 }
