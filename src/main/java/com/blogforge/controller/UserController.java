@@ -47,9 +47,9 @@ public class UserController {
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 
-    @PatchMapping(path = "/api/v1/users/{username}/password")
-    public ResponseEntity<GenericResponse> changePassword(@PathVariable String username, @Valid @RequestBody ChangePasswordRequest dto) {
-        GenericResponse gr = userService.changePassword(username, dto);
+    @PatchMapping(path = "/api/v1/users/me/password")
+    public ResponseEntity<GenericResponse> changePassword(@Valid @RequestBody ChangePasswordRequest dto) {
+        GenericResponse gr = userService.changePassword(dto);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }

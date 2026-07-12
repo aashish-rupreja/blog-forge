@@ -18,5 +18,5 @@ public interface UserService {
 
     UserProfileResponse partialUpdate(String username, UpdateUserRequest dto);
 
-    GenericResponse changePassword(String username, ChangePasswordRequest dto);
+    GenericResponse changePassword(ChangePasswordRequest dto);
 }

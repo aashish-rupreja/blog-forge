@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -160,12 +161,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public GenericResponse changePassword(String username, ChangePasswordRequest dto) {
-        LOG.info("Attempting password update for User \"{}\"", username);
+    public GenericResponse changePassword(ChangePasswordRequest dto) {
+        String authenticatedUsername = SecurityContextHolder.getContext()
+                        .getAuthentication()
+                        .getName();
 
-        Optional<User> check = userRepository.findByUsernameIgnoreCase(username);
+        LOG.info("Attempting password update for User \"{}\"", authenticatedUsername);
+
+        Optional<User> check = userRepository.findByUsernameIgnoreCase(authenticatedUsername);
         if(check.isEmpty()) {
-            String notFound = messageResolver.getMessage("entity.not-found", "User with username", username);
+            String notFound = messageResolver.getMessage("entity.not-found", "User with username", authenticatedUsername);
             LOG.warn(notFound);
             throw new EntityNotFoundException(notFound);
         }
