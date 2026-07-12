@@ -1,19 +1,16 @@
 package com.blogforge.controller;
 
+import com.blogforge.dto.user.CreateUserRequest;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.UserService;
 import com.blogforge.specification.user.UserSpecificationParams;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class UserController {
@@ -36,6 +33,12 @@ public class UserController {
     @GetMapping(path = "/api/v1/users/{username}")
     public ResponseEntity<UserProfileResponse> getUserProfile(@PathVariable String username) {
         UserProfileResponse upr = userService.getUserProfile(username);
+        return new ResponseEntity<>(upr, HttpStatus.OK);
+    }
+
+    @PostMapping(path = "/api/v1/users")
+    public ResponseEntity<UserProfileResponse> create(@Valid @RequestBody CreateUserRequest dto) {
+        UserProfileResponse upr = userService.create(dto);
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 }

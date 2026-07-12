@@ -1,5 +1,6 @@
 package com.blogforge.service;
 
+import com.blogforge.dto.user.CreateUserRequest;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.pagination.PagedResponse;
@@ -13,4 +14,6 @@ public interface UserService {
     PagedResponse<UserSummaryResponse> getAllUserSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams);
 
     UserProfileResponse getUserProfile(String username);
+
+    UserProfileResponse create(CreateUserRequest dto);
 }
