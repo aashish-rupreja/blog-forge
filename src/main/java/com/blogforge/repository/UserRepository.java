@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
 
-    Optional<User> findByUsername(String username, Specification<User> userSpec);
+    Optional<User> findByUsername(String username);
 
     Optional<User> findByUsernameAndRoles_Name(String username, String roleName);
 
