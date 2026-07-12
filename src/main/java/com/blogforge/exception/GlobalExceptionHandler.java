@@ -57,4 +57,16 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(er, httpStatus);
     }
+
+    @ExceptionHandler(PasswordMismatchException.class)
+    public ResponseEntity<ExceptionResponse> handlePasswordMismatchException(PasswordMismatchException e, HttpServletRequest req) {
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        ExceptionResponse er = new ExceptionResponse(
+                Instant.now(),
+                httpStatus.value(),
+                e.getMessage(),
+                req.getServletPath()
+        );
+        return new ResponseEntity<>(er, httpStatus);
+    }
 }
