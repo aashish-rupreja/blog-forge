@@ -1,5 +1,6 @@
 package com.blogforge.service;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.pagination.PagedResponse;
