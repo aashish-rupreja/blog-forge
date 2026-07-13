@@ -1,8 +1,12 @@
 package com.blogforge.service.impl;
 
 import com.blogforge.dto.authorapplication.AuthorApplicationResponse;
+import com.blogforge.dto.authorapplication.CreateAuthorApplicationRequest;
 import com.blogforge.dto.authorapplication.MyAuthorApplicationsRequest;
 import com.blogforge.entity.AuthorApplication;
+import com.blogforge.entity.AuthorApplicationStatus;
+import com.blogforge.exception.AuthorApplicationAlreadyExistsException;
+import com.blogforge.exception.MessageResolver;
 import com.blogforge.mapper.AuthorApplicationMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
@@ -15,9 +19,12 @@ import org.springframework.beans.factory.BeanRegistry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AuthorApplicationServiceImpl implements AuthorApplicationService {
@@ -25,9 +32,15 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
     private final AuthorApplicationRepository authorApplicationRepository;
     private final AuthorApplicationMapper authorApplicationMapper;
 
-    public AuthorApplicationServiceImpl(AuthorApplicationRepository authorApplicationRepository, AuthorApplicationMapper authorApplicationMapper) {
+    private final MessageResolver messageResolver;
+
+    public AuthorApplicationServiceImpl(
+            AuthorApplicationRepository authorApplicationRepository,
+            AuthorApplicationMapper authorApplicationMapper,
+            MessageResolver messageResolver) {
         this.authorApplicationRepository = authorApplicationRepository;
         this.authorApplicationMapper = authorApplicationMapper;
+        this.messageResolver = messageResolver;
     }
 
     @Override
@@ -51,9 +64,11 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
     @Override
     public PagedResponse<AuthorApplicationResponse> getMyAuthorApplications(PaginationRequestParams reqParams, MyAuthorApplicationsRequest specParams) {
 
-        String currentAuthenticatedUser = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
+        String currentAuthenticatedUser = "groot.tree";
+
+//        String currentAuthenticatedUser = SecurityContextHolder.getContext()
+//                .getAuthentication()
+//                .getName();
 
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -72,4 +87,37 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
                 myAuthorApplications.hasNext()
         );
     }
+
+    @Override
+    public AuthorApplicationResponse create(CreateAuthorApplicationRequest dto) {
+        String currentAuthenticatedUser = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        boolean isAuthor = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getAuthorities()
+                .contains(new SimpleGrantedAuthority("ROLE_AUTHOR"));
+
+        if(isAuthor) {
+            String alreadyAuthor = messageResolver.getMessage("authorApplication.already-exists.approved");
+            throw new IllegalStateException(alreadyAuthor);
+        }
+
+        Optional<AuthorApplication> check =
+                authorApplicationRepository.findByApplicant_Username(currentAuthenticatedUser);
+
+        if(check.isPresent()) {
+            AuthorApplicationStatus existingApplicationStatus = check.get().getStatus();
+            if(existingApplicationStatus == AuthorApplicationStatus.PENDING) {
+                String alreadyPending = messageResolver.getMessage("authorApplication.already-exists.pending");
+                throw new AuthorApplicationAlreadyExistsException(alreadyPending);
+            }
+        }
+
+        AuthorApplication newApplication = authorApplicationMapper.fromCreateRequestToEntity(dto);
+        AuthorApplication saved = authorApplicationRepository.save(newApplication);
+        return authorApplicationMapper.fromEntityToResponse(saved);
+    }
+
 }

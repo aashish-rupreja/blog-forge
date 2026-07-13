@@ -38,4 +38,10 @@ public class AuthorApplicationController {
         PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getMyAuthorApplications(reqParams, specParams);
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
+
+    @PostMapping(path = "/api/v1/author-applications")
+    public ResponseEntity<AuthorApplicationResponse> create(@Valid @RequestBody CreateAuthorApplicationRequest dto) {
+        AuthorApplicationResponse aar = authorApplicationService.create(dto);
+        return new ResponseEntity<>(aar, HttpStatus.CREATED);
+    }
 }
