@@ -20,4 +20,6 @@ public interface BlogService {
     BlogDetailsResponse partialUpdate(String slug, UpdateBlogRequest updateBlogRequest);
 
     GenericResponse delete(String slug);
+
+    PagedResponse<BlogSummaryResponse> getMyBlogs(PaginationRequestParams reqParams);
 }

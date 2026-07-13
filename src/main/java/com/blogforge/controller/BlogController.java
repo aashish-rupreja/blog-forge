@@ -63,4 +63,10 @@ public class BlogController {
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
+    @GetMapping(path = "/api/v1/blogs/own")
+    public ResponseEntity<PagedResponse<BlogSummaryResponse>> getMyBlogs(@ModelAttribute PaginationRequestParams reqParams) {
+        PagedResponse<BlogSummaryResponse> myBlogs = blogService.getMyBlogs(reqParams);
+        return new ResponseEntity<>(myBlogs, HttpStatus.OK);
+    }
+
 }

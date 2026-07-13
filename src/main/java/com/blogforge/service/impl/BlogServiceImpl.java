@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -183,6 +184,27 @@ public class BlogServiceImpl implements BlogService {
         blogRepository.save(b);
         String deleteMessage = messageResolver.getMessage("blog.blogStatus.deleted", b.getTitle());
         return new GenericResponse(deleteMessage);
+    }
+
+    @Override
+    public PagedResponse<BlogSummaryResponse> getMyBlogs(PaginationRequestParams reqParams) {
+        String currentAuthenticatedUser = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
+        Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
+        Page<Blog> myBlogs = blogRepository.findAllByAuthor_UsernameIgnoreCase(currentAuthenticatedUser, jpaPageable);
+
+        return new PagedResponse<>(
+                myBlogs.stream().map(blogMapper::fromEntityToSummaryResponse).toList(),
+                myBlogs.getNumber()+1,
+                myBlogs.getSize(),
+                myBlogs.getTotalPages(),
+                myBlogs.getTotalElements(),
+                myBlogs.isEmpty(),
+                myBlogs.hasNext()
+        );
     }
 
     private String generateSlug(String title) {
