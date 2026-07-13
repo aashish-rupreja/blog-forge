@@ -1,16 +1,16 @@
 package com.blogforge.controller;
 
 import com.blogforge.dto.authorapplication.AuthorApplicationResponse;
-import com.blogforge.entity.AuthorApplication;
+import com.blogforge.dto.authorapplication.CreateAuthorApplicationRequest;
+import com.blogforge.dto.authorapplication.MyAuthorApplicationsRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.AuthorApplicationService;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecificationParams;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class AuthorApplicationController {
@@ -27,6 +27,15 @@ public class AuthorApplicationController {
             @ModelAttribute AuthorApplicationSpecificationParams specParams
             ) {
         PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getAll(reqParams, specParams);
+        return new ResponseEntity<>(responses, HttpStatus.OK);
+    }
+
+    @GetMapping(path = "/api/v1/me/author-applications")
+    public ResponseEntity<PagedResponse<AuthorApplicationResponse>> getMyAuthorApplications(
+            @ModelAttribute PaginationRequestParams reqParams,
+            @ModelAttribute MyAuthorApplicationsRequest specParams
+    ) {
+        PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getMyAuthorApplications(reqParams, specParams);
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 }
