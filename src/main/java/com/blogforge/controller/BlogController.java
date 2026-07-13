@@ -2,6 +2,7 @@ package com.blogforge.controller;
 
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
+import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
@@ -9,10 +10,7 @@ import com.blogforge.service.BlogService;
 import com.blogforge.specification.blog.BlogSpecificationParams;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -50,4 +48,13 @@ public class BlogController {
         PagedResponse<CommentResponse> comments = blogService.getBlogComments(slug, reqParams);
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }
+
+    // following operations are only allowed to the author of the blog, authorization will be added later
+    @PatchMapping(path = "/api/v1/blogs/{slug}")
+    public ResponseEntity<BlogDetailsResponse> partialUpdate(@PathVariable String slug, @RequestBody UpdateBlogRequest updateBlogRequest) {
+        BlogDetailsResponse bdr = blogService.partialUpdate(slug, updateBlogRequest);
+        return new ResponseEntity<>(bdr, HttpStatus.OK);
+    }
+
+
 }
