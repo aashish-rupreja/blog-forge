@@ -10,6 +10,7 @@ import com.blogforge.repository.UserRepository;
 import com.blogforge.service.FollowService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -59,7 +60,10 @@ public class FollowServiceImpl implements FollowService {
         }
 
         // check if user is attempting self follow
-        String currentAuthenticatedUsername = "steve.rogers";
+        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
         if(currentAuthenticatedUsername.equals(authorName)) {
             String selfFollowNotAllowed = messageResolver.getMessage("follow.self.not-allowed");
             throw new IllegalStateException(selfFollowNotAllowed);
@@ -95,7 +99,9 @@ public class FollowServiceImpl implements FollowService {
     @Override
     @Transactional
     public GenericResponse delete(String authorName) {
-        String currentAuthenticatedUsername = "steve.rogers";
+        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
         if(currentAuthenticatedUsername.equals(authorName)) {
             String selfUnfollow = messageResolver.getMessage("unfollow.self.not-allowed");
             throw new IllegalStateException(selfUnfollow);
