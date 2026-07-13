@@ -5,4 +5,6 @@ import com.blogforge.dto.GenericResponse;
 public interface FollowService {
 
     GenericResponse create(String authorName);
+
+    GenericResponse delete(String authorName);
 }

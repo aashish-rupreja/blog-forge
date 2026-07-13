@@ -45,4 +45,10 @@ public class AuthorController {
         GenericResponse gr = followService.create(authorName);
         return new ResponseEntity<>(gr, HttpStatus.CREATED);
     }
+
+    @DeleteMapping(path = "/api/v1/authors/{authorName}/follow")
+    public ResponseEntity<GenericResponse> unfollowAuthor(@PathVariable String authorName) {
+        GenericResponse gr = followService.delete(authorName);
+        return new ResponseEntity<>(gr, HttpStatus.CREATED);
+    }
 }

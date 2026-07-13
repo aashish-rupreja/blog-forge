@@ -9,6 +9,7 @@ import com.blogforge.repository.FollowRepository;
 import com.blogforge.repository.UserRepository;
 import com.blogforge.service.FollowService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -89,5 +90,22 @@ public class FollowServiceImpl implements FollowService {
 
         String followSuccessful = messageResolver.getMessage("follow.successful", authorName);
         return new GenericResponse(followSuccessful);
+    }
+
+    @Override
+    @Transactional
+    public GenericResponse delete(String authorName) {
+        String currentAuthenticatedUsername = "steve.rogers";
+        if(currentAuthenticatedUsername.equals(authorName)) {
+            String selfUnfollow = messageResolver.getMessage("unfollow.self.not-allowed");
+            throw new IllegalStateException(selfUnfollow);
+        }
+
+        int d = followRepository.deleteByFollower_UsernameAndFollowing_Username(currentAuthenticatedUsername, authorName);
+        String msg = (d > 0)
+                ? messageResolver.getMessage("unfollow.successful", authorName)
+                : messageResolver.getMessage("unfollow.unnecessary", authorName);
+
+        return new GenericResponse(msg);
     }
 }
