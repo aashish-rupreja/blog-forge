@@ -1,13 +1,11 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
-import com.blogforge.entity.Blog;
-import com.blogforge.entity.Category;
-import com.blogforge.entity.Comment;
-import com.blogforge.entity.Tag;
+import com.blogforge.entity.*;
 import com.blogforge.exception.IllegalBlogTransitionException;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.mapper.BlogMapper;
@@ -168,6 +166,23 @@ public class BlogServiceImpl implements BlogService {
 
         Blog saved = blogRepository.save(b);
         return blogMapper.fromEntityToDetailsResponse(saved);
+    }
+
+    @Override
+    public GenericResponse delete(String slug) {
+        Blog b = blogRepository.findBySlugIgnoreCase(slug)
+                .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
+                        "entity.not-found",
+                        "Blog", slug
+                )));
+
+        if(!b.getStatus().canTransitionTo(BlogStatus.DELETED.toString())) {
+            throw new IllegalBlogTransitionException(messageResolver.getMessage("blog.transition.illegal", b.getStatus().toString(), BlogStatus.DELETED.toString()));
+        }
+        b.setStatus(BlogStatus.DELETED);
+        blogRepository.save(b);
+        String deleteMessage = messageResolver.getMessage("blog.blogStatus.deleted", b.getTitle());
+        return new GenericResponse(deleteMessage);
     }
 
     private String generateSlug(String title) {

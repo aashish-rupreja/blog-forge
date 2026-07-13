@@ -1,5 +1,6 @@
 package com.blogforge.service;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
 import com.blogforge.dto.blog.UpdateBlogRequest;
@@ -17,4 +18,6 @@ public interface BlogService {
     PagedResponse<CommentResponse> getBlogComments(String slug, PaginationRequestParams requestParams);
 
     BlogDetailsResponse partialUpdate(String slug, UpdateBlogRequest updateBlogRequest);
+
+    GenericResponse delete(String slug);
 }

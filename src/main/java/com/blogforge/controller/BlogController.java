@@ -1,5 +1,6 @@
 package com.blogforge.controller;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
 import com.blogforge.dto.blog.UpdateBlogRequest;
@@ -56,5 +57,10 @@ public class BlogController {
         return new ResponseEntity<>(bdr, HttpStatus.OK);
     }
 
+    @DeleteMapping(path = "/api/v1/blogs/{slug}")
+    public ResponseEntity<GenericResponse> delete(@PathVariable String slug) {
+        GenericResponse gr = blogService.delete(slug);
+        return new ResponseEntity<>(gr, HttpStatus.OK);
+    }
 
 }
