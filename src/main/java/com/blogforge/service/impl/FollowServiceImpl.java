@@ -37,13 +37,13 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public GenericResponse create(String authorName) {
+    public GenericResponse create(String username) {
         // check if author even exists
-        Optional<User> checkAuthor = userRepository.findByUsernameIgnoreCase(authorName);
+        Optional<User> checkAuthor = userRepository.findByUsernameIgnoreCase(username);
         if(checkAuthor.isEmpty()) {
             String authorNotExists = messageResolver.getMessage(
                 "entity.not-found",
-                    "Author", authorName
+                    "Author", username
             );
             throw new EntityNotFoundException(authorNotExists);
         }
@@ -64,7 +64,7 @@ public class FollowServiceImpl implements FollowService {
                 .getAuthentication()
                 .getName();
 
-        if(currentAuthenticatedUsername.equals(authorName)) {
+        if(currentAuthenticatedUsername.equals(username)) {
             String selfFollowNotAllowed = messageResolver.getMessage("follow.self.not-allowed");
             throw new IllegalStateException(selfFollowNotAllowed);
         }
@@ -75,12 +75,12 @@ public class FollowServiceImpl implements FollowService {
         // check if current user is already following the author
         boolean alreadyFollowing = followRepository.existsByFollower_UsernameAndFollowing_Username(
                 currentAuthenticatedUsername,
-                authorName
+                username
         );
         if(alreadyFollowing) {
             String alreadyFollowingAuthor = messageResolver.getMessage(
                     "follow.already-following",
-                    authorName
+                    username
             );
             throw new IllegalStateException(alreadyFollowingAuthor);
         }
@@ -92,25 +92,25 @@ public class FollowServiceImpl implements FollowService {
         f.setFollowedAt(Instant.now());
         followRepository.save(f);
 
-        String followSuccessful = messageResolver.getMessage("follow.successful", authorName);
+        String followSuccessful = messageResolver.getMessage("follow.successful", username);
         return new GenericResponse(followSuccessful);
     }
 
     @Override
     @Transactional
-    public GenericResponse delete(String authorName) {
+    public GenericResponse delete(String username) {
         String currentAuthenticatedUsername = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getName();
-        if(currentAuthenticatedUsername.equals(authorName)) {
+        if(currentAuthenticatedUsername.equals(username)) {
             String selfUnfollow = messageResolver.getMessage("unfollow.self.not-allowed");
             throw new IllegalStateException(selfUnfollow);
         }
 
-        int d = followRepository.deleteByFollower_UsernameAndFollowing_Username(currentAuthenticatedUsername, authorName);
+        int d = followRepository.deleteByFollower_UsernameAndFollowing_Username(currentAuthenticatedUsername, username);
         String msg = (d > 0)
-                ? messageResolver.getMessage("unfollow.successful", authorName)
-                : messageResolver.getMessage("unfollow.unnecessary", authorName);
+                ? messageResolver.getMessage("unfollow.successful", username)
+                : messageResolver.getMessage("unfollow.unnecessary", username);
 
         return new GenericResponse(msg);
     }

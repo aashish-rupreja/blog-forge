@@ -40,9 +40,9 @@ public class AuthorController {
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 
-    @PostMapping(path = "/api/v1/authors/{authorName}/follow")
-    public ResponseEntity<GenericResponse> followAuthor(@PathVariable String authorName) {
-        GenericResponse gr = followService.create(authorName);
+    @PostMapping(path = "/api/v1/authors/{username}/follow")
+    public ResponseEntity<GenericResponse> followAuthor(@PathVariable String username) {
+        GenericResponse gr = followService.create(username);
         return new ResponseEntity<>(gr, HttpStatus.CREATED);
     }
 
