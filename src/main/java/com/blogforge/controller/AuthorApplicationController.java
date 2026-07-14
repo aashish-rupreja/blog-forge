@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 public class AuthorApplicationController {
 
@@ -28,6 +30,12 @@ public class AuthorApplicationController {
             ) {
         PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getAll(reqParams, specParams);
         return new ResponseEntity<>(responses, HttpStatus.OK);
+    }
+
+    @GetMapping(path = "/api/v1/author-applications/{uuid}")
+    public ResponseEntity<AuthorApplicationResponse> getSingleApplication(@PathVariable UUID uuid) {
+        AuthorApplicationResponse aar = authorApplicationService.getSingleApplication(uuid);
+        return new ResponseEntity<>(aar, HttpStatus.OK);
     }
 
     @GetMapping(path = "/api/v1/me/author-applications")

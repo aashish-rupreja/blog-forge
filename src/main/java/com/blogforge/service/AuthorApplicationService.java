@@ -7,6 +7,8 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecificationParams;
 
+import java.util.UUID;
+
 public interface AuthorApplicationService {
 
     PagedResponse<AuthorApplicationResponse> getAll(PaginationRequestParams reqParams, AuthorApplicationSpecificationParams specParams);
@@ -14,4 +16,6 @@ public interface AuthorApplicationService {
     PagedResponse<AuthorApplicationResponse> getMyAuthorApplications(PaginationRequestParams reqParams, MyAuthorApplicationsRequest specParams);
 
     AuthorApplicationResponse create(CreateAuthorApplicationRequest dto);
+
+    AuthorApplicationResponse getSingleApplication(UUID id);
 }

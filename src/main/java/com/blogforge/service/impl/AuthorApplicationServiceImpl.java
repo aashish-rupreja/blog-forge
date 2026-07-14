@@ -15,6 +15,7 @@ import com.blogforge.repository.AuthorApplicationRepository;
 import com.blogforge.service.AuthorApplicationService;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecification;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecificationParams;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.BeanRegistry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthorApplicationServiceImpl implements AuthorApplicationService {
@@ -119,5 +121,17 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
         AuthorApplication saved = authorApplicationRepository.save(newApplication);
         return authorApplicationMapper.fromEntityToResponse(saved);
     }
+
+    @Override
+    public AuthorApplicationResponse getSingleApplication(UUID id) {
+        AuthorApplication aa = authorApplicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
+                        "entity.not-found",
+                        "Author Application", id.toString()
+                )));
+
+        return authorApplicationMapper.fromEntityToResponse(aa);
+    }
+
 
 }
