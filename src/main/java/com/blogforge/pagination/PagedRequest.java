@@ -39,7 +39,7 @@ public class PagedRequest {
         else { pr.setPageNo(params.pageNo() - 1); }
 
         if (params.pageSize() == null || params.pageSize() < 5) { pr.setPageSize(5); }
-        else { pr.setPageNo(params.pageNo()); }
+        else { pr.setPageSize(params.pageSize()); }
 
         if (params.sortDirection() == null ||
                 (params.sortDirection() != Sort.Direction.ASC && params.sortDirection() != Sort.Direction.DESC))
