@@ -10,7 +10,6 @@ public record UserProfileResponse(
         String lastName,
         String username,
         String profilePicLink,
-        String bio,
-        long blogCount
+        String bio
 ) {
 }

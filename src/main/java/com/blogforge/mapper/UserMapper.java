@@ -49,7 +49,6 @@ public class UserMapper {
     }
 
     public UserProfileResponse fromEntityToProfileResponse(User u) {
-        Set<Blog> blogs = (Set) Util.getOrDefault(u.getBlogs(), new HashSet<>());
         return new UserProfileResponse(
                 new BaseResponse(
                         u.getUuid(),
@@ -59,8 +58,7 @@ public class UserMapper {
                 u.getLastName(),
                 u.getUsername(),
                 u.getProfilePicLink(),
-                u.getBio(),
-                blogs.size()
+                u.getBio()
         );
     }
 }
