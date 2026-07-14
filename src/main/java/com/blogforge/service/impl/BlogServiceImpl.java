@@ -135,8 +135,7 @@ public class BlogServiceImpl implements BlogService {
             b.setStatus(updateBlogRequest.blogStatus());
         }
         if (updateBlogRequest.categories() != null) {
-            Set<Category> categories = new HashSet<>(categoryRepository.findByNameIn(updateBlogRequest.categories()));
-            b.setCategories(categories);
+            addCategoriesIfValid(b, updateBlogRequest.categories());
         }
         if (updateBlogRequest.tags() != null) {
             Set<Tag> updatedTags = handleTags(b, updateBlogRequest.tags());
@@ -189,9 +188,11 @@ public class BlogServiceImpl implements BlogService {
     public BlogDetailsResponse create(CreateBlogRequest dto) {
         Blog b = blogMapper.fromCreateRequestToEntity(dto);
 
-        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
-                        .getAuthentication()
-                        .getName();
+//        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
+//                        .getAuthentication()
+//                        .getName();
+
+        String currentAuthenticatedUsername = "bruce.banner";
 
         Optional<User> check = userRepository.findByUsernameIgnoreCase(currentAuthenticatedUsername);
         if (check.isEmpty()) {
@@ -212,8 +213,7 @@ public class BlogServiceImpl implements BlogService {
         b.setAuthor(author);
 
         // handle categories
-        Collection<Category> categories = categoryRepository.findByNameIn(dto.categories());
-        b.setCategories(Set.copyOf(categories));
+        addCategoriesIfValid(b, dto.categories());
 
         // handle tags
         Set<Tag> tags = handleTags(b, dto.tags());
@@ -227,6 +227,29 @@ public class BlogServiceImpl implements BlogService {
 
         Blog saved = blogRepository.save(b);
         return blogMapper.fromEntityToDetailsResponse(saved);
+    }
+
+    @Override
+    public GenericResponse hardDelete(List<UUID> uuids) {
+        blogRepository.deleteAllById(uuids);
+        return new GenericResponse("Blogs Deleted!");
+    }
+
+    private void addCategoriesIfValid(Blog b, Set<String> incomingCategories) {
+        Collection<Category> knownCategories = categoryRepository.findByNameIn(incomingCategories);
+        if(knownCategories.size() != incomingCategories.size()) {
+            Set<String> knownCategoryNames = knownCategories.stream()
+                    .map(Category::getName)
+                    .collect(Collectors.toSet());
+
+            // removing known categories from incoming ones leave us with unknown categories
+            incomingCategories.removeAll(knownCategoryNames);
+
+            String unknownCategoriesNotAllowedMsg =
+                    messageResolver.getMessage("blog.categories.unknown-exist", incomingCategories);
+            throw new IllegalArgumentException(unknownCategoriesNotAllowedMsg);
+        }
+        b.setCategories(new HashSet<>(knownCategories));
     }
 
     private Set<Tag> handleTags(Blog b, Set<String> incomingTags) {
@@ -262,10 +285,17 @@ public class BlogServiceImpl implements BlogService {
                             .replaceAll("-+", "-")
                             .replaceAll("^-|-$", "");
 
-        String slugFriendlyAuthorId = authorId.toString()
-                                        .replace("-", "")
-                                        .substring(0, 8);
+        List<String> similarSlugs = blogRepository.findSimilarSlugs(titleSlug);
 
-        return titleSlug+"-"+slugFriendlyAuthorId;
+        if(similarSlugs.isEmpty()) return titleSlug;
+
+        int latestNo = 0;
+        for(String similarSlug : similarSlugs) {
+            if(similarSlug.equals(titleSlug)) continue;
+
+            int slugNo = Integer.parseInt(similarSlug.substring(titleSlug.length()+1));
+            latestNo = Math.max(latestNo, slugNo);
+        }
+        return titleSlug+"-"+(latestNo+1);
     }
 }

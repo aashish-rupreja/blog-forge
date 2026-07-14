@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class BlogController {
@@ -75,6 +76,12 @@ public class BlogController {
     public ResponseEntity<BlogDetailsResponse> create(@Valid @RequestBody CreateBlogRequest dto) {
         BlogDetailsResponse blogResponse = blogService.create(dto);
         return new ResponseEntity<>(blogResponse, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping(path = "/api/v1/blogs/hard-delete")
+    public ResponseEntity<GenericResponse> hardDelete(@RequestBody List<UUID> uuids) {
+        GenericResponse gr = blogService.hardDelete(uuids);
+        return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
 }

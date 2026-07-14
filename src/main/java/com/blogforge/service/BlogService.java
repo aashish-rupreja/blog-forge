@@ -10,6 +10,9 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.blog.BlogSpecificationParams;
 
+import java.util.List;
+import java.util.UUID;
+
 public interface BlogService {
 
     PagedResponse<BlogSummaryResponse> getAllSummary(PaginationRequestParams reqParams, BlogSpecificationParams specParams);
@@ -25,4 +28,6 @@ public interface BlogService {
     PagedResponse<BlogSummaryResponse> getMyBlogs(PaginationRequestParams reqParams);
 
     BlogDetailsResponse create(CreateBlogRequest dto);
+
+    GenericResponse hardDelete(List<UUID> uuids);
 }
