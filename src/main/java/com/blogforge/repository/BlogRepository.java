@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,7 +19,8 @@ public interface BlogRepository extends JpaRepository<Blog, UUID>, JpaSpecificat
     Page<Blog> findAllByAuthor_UsernameIgnoreCase(String authorUsername, Pageable pageable);
 
     @Query(value = """
-            SELECT bfb.slug FROM bf_blog bfb WHERE bfb.slug ILIKE (:prefix%) ORDER BY bfb.slug DESC
+        SELECT bfb.slug FROM bf_blog bfb
+        WHERE bfb.slug = :slug OR bfb.slug ~ CONCAT('^', :slug, '-[0-9]+$')
     """, nativeQuery = true)
-    Optional<String> findLatestSlugWithPrefix(String prefix);
+    List<String> findSimilarSlugs(String slug);
 }
