@@ -17,7 +17,7 @@ public record CreateBlogRequest(
         @NotNull(message = "{blog.enableComments.notNull}")
         boolean enableComments,
 
-        @NotBlank(message = "{blog.blogStatus.notBlank}")
+        @NotNull(message = "{blog.blogStatus.notBlank}")
         BlogStatus blogStatus,
 
         @NotEmpty(message = "{blog.categoryIds.notEmpty}")

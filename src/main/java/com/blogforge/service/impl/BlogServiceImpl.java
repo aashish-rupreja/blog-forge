@@ -3,6 +3,7 @@ package com.blogforge.service.impl;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
+import com.blogforge.dto.blog.CreateBlogRequest;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.entity.*;
@@ -13,10 +14,7 @@ import com.blogforge.mapper.CommentMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
-import com.blogforge.repository.BlogRepository;
-import com.blogforge.repository.CategoryRepository;
-import com.blogforge.repository.CommentRepository;
-import com.blogforge.repository.TagRepository;
+import com.blogforge.repository.*;
 import com.blogforge.service.BlogService;
 import com.blogforge.specification.blog.BlogSpecification;
 import com.blogforge.specification.blog.BlogSpecificationParams;
@@ -29,13 +27,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class BlogServiceImpl implements BlogService {
+
+    private final String AUTHOR_ROLE_NAME = "ROLE_AUTHOR";
 
     private final Logger LOG = LoggerFactory.getLogger(BlogServiceImpl.class);
 
@@ -43,6 +42,7 @@ public class BlogServiceImpl implements BlogService {
     private final CommentRepository commentRepository;
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
+    private final UserRepository userRepository;
     private final BlogMapper blogMapper;
     private final CommentMapper commentMapper;
     private final MessageResolver messageResolver;
@@ -52,6 +52,7 @@ public class BlogServiceImpl implements BlogService {
             CommentRepository commentRepository,
             CategoryRepository categoryRepository,
             TagRepository tagRepository,
+            UserRepository userRepository,
             BlogMapper blogMapper,
             CommentMapper commentMapper,
             MessageResolver messageResolver) {
@@ -59,6 +60,7 @@ public class BlogServiceImpl implements BlogService {
         this.commentRepository = commentRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
+        this.userRepository = userRepository;
         this.blogMapper = blogMapper;
         this.commentMapper = commentMapper;
         this.messageResolver = messageResolver;
@@ -72,7 +74,7 @@ public class BlogServiceImpl implements BlogService {
         Page<Blog> blogSummaries = blogRepository.findAll(spec, jpaPageable);
         return new PagedResponse<>(
                 blogSummaries.stream().map(blogMapper::fromEntityToSummaryResponse).toList(),
-                blogSummaries.getNumber()+1,
+                blogSummaries.getNumber() + 1,
                 blogSummaries.getSize(),
                 blogSummaries.getTotalPages(),
                 blogSummaries.getTotalElements(),
@@ -100,7 +102,7 @@ public class BlogServiceImpl implements BlogService {
 
         return new PagedResponse<>(
                 comments.stream().map(commentMapper::fromEntityToResponse).toList(),
-                comments.getNumber()+1,
+                comments.getNumber() + 1,
                 comments.getSize(),
                 comments.getTotalPages(),
                 comments.getTotalElements(),
@@ -116,53 +118,29 @@ public class BlogServiceImpl implements BlogService {
                         "Blog", slug
                 )));
 
-        if(updateBlogRequest.title() != null) {
+        if (updateBlogRequest.title() != null) {
             b.setTitle(updateBlogRequest.title());
-            b.setSlug(generateSlug(updateBlogRequest.title()));
+            b.setSlug(generateSlug(updateBlogRequest.title(), b.getAuthor().getUuid()));
         }
-        if(updateBlogRequest.content() != null) {
+        if (updateBlogRequest.content() != null) {
             b.setContent(updateBlogRequest.content());
         }
-        if(updateBlogRequest.enableComments() != null) {
+        if (updateBlogRequest.enableComments() != null) {
             b.setEnableComments(updateBlogRequest.enableComments());
         }
-        if(updateBlogRequest.blogStatus() != null) {
-            if(!b.getStatus().canTransitionTo(updateBlogRequest.blogStatus().toString())) {
+        if (updateBlogRequest.blogStatus() != null) {
+            if (!b.getStatus().canTransitionTo(updateBlogRequest.blogStatus().toString())) {
                 throw new IllegalBlogTransitionException(messageResolver.getMessage("blog.transition.illegal", b.getStatus().toString(), updateBlogRequest.blogStatus().toString()));
             }
             b.setStatus(updateBlogRequest.blogStatus());
         }
-        if(updateBlogRequest.categories() != null) {
+        if (updateBlogRequest.categories() != null) {
             Set<Category> categories = new HashSet<>(categoryRepository.findByNameIn(updateBlogRequest.categories()));
             b.setCategories(categories);
         }
-        if(updateBlogRequest.tags() != null) {
-            Set<String> currentTags = b.getTags().stream().map(Tag::getName).collect(Collectors.toSet());
-            Set<Tag> newTagsToAdd = new HashSet<>(b.getTags());
-
-            for(String tagToUpdate : updateBlogRequest.tags()) {
-
-                // check if blog already has incoming tag
-                if(!currentTags.contains(tagToUpdate)) {
-
-                    // check if incoming tag exists
-                    Optional<Tag> t = tagRepository.findByNameIgnoreCase(tagToUpdate);
-
-                    // create new tag
-                    if(t.isEmpty()) {
-                        Tag newTag = new Tag();
-                        newTag.setName(tagToUpdate);
-                        Tag saved = tagRepository.save(newTag);
-                        newTagsToAdd.add(saved);
-                    } else {
-                        newTagsToAdd.add(t.get());
-                    }
-                }
-
-                // at the end of this loop newTagsToAdd contains the new tags to be added to the blog
-            }
-
-            b.setTags(newTagsToAdd);
+        if (updateBlogRequest.tags() != null) {
+            Set<Tag> updatedTags = handleTags(b, updateBlogRequest.tags());
+            b.setTags(updatedTags);
         }
 
         Blog saved = blogRepository.save(b);
@@ -177,7 +155,7 @@ public class BlogServiceImpl implements BlogService {
                         "Blog", slug
                 )));
 
-        if(!b.getStatus().canTransitionTo(BlogStatus.DELETED.toString())) {
+        if (!b.getStatus().canTransitionTo(BlogStatus.DELETED.toString())) {
             throw new IllegalBlogTransitionException(messageResolver.getMessage("blog.transition.illegal", b.getStatus().toString(), BlogStatus.DELETED.toString()));
         }
         b.setStatus(BlogStatus.DELETED);
@@ -198,7 +176,7 @@ public class BlogServiceImpl implements BlogService {
 
         return new PagedResponse<>(
                 myBlogs.stream().map(blogMapper::fromEntityToSummaryResponse).toList(),
-                myBlogs.getNumber()+1,
+                myBlogs.getNumber() + 1,
                 myBlogs.getSize(),
                 myBlogs.getTotalPages(),
                 myBlogs.getTotalElements(),
@@ -207,13 +185,87 @@ public class BlogServiceImpl implements BlogService {
         );
     }
 
-    private String generateSlug(String title) {
-        return title
-                .trim()
-                .toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .replaceAll("\\s+", "-")
-                .replaceAll("-+", "-")
-                .replaceAll("^-|-$", "");
+    @Override
+    public BlogDetailsResponse create(CreateBlogRequest dto) {
+        Blog b = blogMapper.fromCreateRequestToEntity(dto);
+
+        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
+                        .getAuthentication()
+                        .getName();
+
+        Optional<User> check = userRepository.findByUsernameIgnoreCase(currentAuthenticatedUsername);
+        if (check.isEmpty()) {
+            String userNotFound = messageResolver.getMessage("entity.not-found", "User", currentAuthenticatedUsername);
+            throw new EntityNotFoundException(userNotFound);
+        }
+
+        Optional<Role> checkAuthor = check.get().getRoles()
+                .stream()
+                .filter(roleName -> roleName.getName().equals(AUTHOR_ROLE_NAME))
+                .findFirst();
+        if (checkAuthor.isEmpty()) {
+            String userNotAuthor = messageResolver.getMessage("user.not-author");
+            throw new IllegalStateException(userNotAuthor);
+        }
+
+        User author = check.get();
+        b.setAuthor(author);
+
+        // handle categories
+        Collection<Category> categories = categoryRepository.findByNameIn(dto.categories());
+        b.setCategories(Set.copyOf(categories));
+
+        // handle tags
+        Set<Tag> tags = handleTags(b, dto.tags());
+        b.setTags(tags);
+
+        // add slug
+        String slug = generateSlug(b.getTitle(), author.getUuid());
+        b.setSlug(slug);
+
+        if(b.getStatus() == BlogStatus.PUBLISHED) b.setPublishedAt(Instant.now());
+
+        Blog saved = blogRepository.save(b);
+        return blogMapper.fromEntityToDetailsResponse(saved);
+    }
+
+    private Set<Tag> handleTags(Blog b, Set<String> incomingTags) {
+        Set<String> currentTags = (b.getTags() != null && !b.getTags().isEmpty())
+                ? b.getTags().stream().map(Tag::getName).collect(Collectors.toSet())
+                : new HashSet<>();
+
+        Set<Tag> newTagsToAdd = new HashSet<>(b.getTags());
+
+        for (String tagToAdd : incomingTags) {
+            if (!currentTags.contains(tagToAdd)) {
+                Optional<Tag> t = tagRepository.findByNameIgnoreCase(tagToAdd);
+
+                if (t.isEmpty()) {
+                    Tag newTag = new Tag();
+                    newTag.setName(tagToAdd);
+                    Tag saved = tagRepository.save(newTag);
+                    newTagsToAdd.add(saved);
+                } else {
+                    newTagsToAdd.add(t.get());
+                }
+            }
+        }
+        return newTagsToAdd;
+    }
+
+    private String generateSlug(String title, UUID authorId) {
+        String titleSlug = title
+                            .trim()
+                            .toLowerCase()
+                            .replaceAll("[^a-z0-9\\s-]", "")
+                            .replaceAll("\\s+", "-")
+                            .replaceAll("-+", "-")
+                            .replaceAll("^-|-$", "");
+
+        String slugFriendlyAuthorId = authorId.toString()
+                                        .replace("-", "")
+                                        .substring(0, 8);
+
+        return titleSlug+"-"+slugFriendlyAuthorId;
     }
 }

@@ -3,6 +3,7 @@ package com.blogforge.service;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
+import com.blogforge.dto.blog.CreateBlogRequest;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.pagination.PagedResponse;
@@ -22,4 +23,6 @@ public interface BlogService {
     GenericResponse delete(String slug);
 
     PagedResponse<BlogSummaryResponse> getMyBlogs(PaginationRequestParams reqParams);
+
+    BlogDetailsResponse create(CreateBlogRequest dto);
 }

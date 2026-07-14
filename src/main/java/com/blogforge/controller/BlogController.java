@@ -3,12 +3,14 @@ package com.blogforge.controller;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
+import com.blogforge.dto.blog.CreateBlogRequest;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.BlogService;
 import com.blogforge.specification.blog.BlogSpecificationParams;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,6 +69,12 @@ public class BlogController {
     public ResponseEntity<PagedResponse<BlogSummaryResponse>> getMyBlogs(@ModelAttribute PaginationRequestParams reqParams) {
         PagedResponse<BlogSummaryResponse> myBlogs = blogService.getMyBlogs(reqParams);
         return new ResponseEntity<>(myBlogs, HttpStatus.OK);
+    }
+
+    @PostMapping(path = "/api/v1/blogs")
+    public ResponseEntity<BlogDetailsResponse> create(@Valid @RequestBody CreateBlogRequest dto) {
+        BlogDetailsResponse blogResponse = blogService.create(dto);
+        return new ResponseEntity<>(blogResponse, HttpStatus.CREATED);
     }
 
 }

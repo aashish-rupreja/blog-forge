@@ -2,10 +2,7 @@ package com.blogforge.mapper;
 
 import com.blogforge.dto.BaseResponse;
 import com.blogforge.dto.blog.*;
-import com.blogforge.entity.Blog;
-import com.blogforge.entity.Category;
-import com.blogforge.entity.ReactionType;
-import com.blogforge.entity.Tag;
+import com.blogforge.entity.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
