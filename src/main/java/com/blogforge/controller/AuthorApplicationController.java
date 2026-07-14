@@ -3,6 +3,7 @@ package com.blogforge.controller;
 import com.blogforge.dto.authorapplication.AuthorApplicationResponse;
 import com.blogforge.dto.authorapplication.CreateAuthorApplicationRequest;
 import com.blogforge.dto.authorapplication.MyAuthorApplicationsRequest;
+import com.blogforge.dto.authorapplication.UpdateAuthorApplicationRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.AuthorApplicationService;
@@ -51,5 +52,22 @@ public class AuthorApplicationController {
     public ResponseEntity<AuthorApplicationResponse> create(@Valid @RequestBody CreateAuthorApplicationRequest dto) {
         AuthorApplicationResponse aar = authorApplicationService.create(dto);
         return new ResponseEntity<>(aar, HttpStatus.CREATED);
+    }
+
+    @PostMapping(path = "api/v1/author-applications/{id}/approve")
+    public ResponseEntity<AuthorApplicationResponse> approveApplication(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateAuthorApplicationRequest dto) {
+        AuthorApplicationResponse aar = authorApplicationService.approveApplication(id, dto);
+        return new ResponseEntity<>(aar, HttpStatus.OK);
+    }
+
+    @PostMapping(path = "/api/v1/author-applications/{id}/reject")
+    public ResponseEntity<AuthorApplicationResponse> rejectApplication(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateAuthorApplicationRequest dto
+    ) {
+        AuthorApplicationResponse aar = authorApplicationService.rejectApplication(id, dto);
+        return new ResponseEntity<>(aar, HttpStatus.OK);
     }
 }

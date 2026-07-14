@@ -7,6 +7,7 @@ import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.user.UserSpecificationParams;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface UserService {
 
@@ -19,4 +20,6 @@ public interface UserService {
     UserProfileResponse partialUpdate(UpdateUserRequest dto);
 
     GenericResponse changePassword(ChangePasswordRequest dto);
+
+    void assignAuthorRole(UUID userId);
 }

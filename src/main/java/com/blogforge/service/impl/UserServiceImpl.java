@@ -29,11 +29,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final String USER_ROLE_NAME = "ROLE_USER";
+    private final String AUTHOR_ROLE_NAME = "ROLE_AUTHOR";
 
     private final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
 
@@ -197,5 +199,23 @@ public class UserServiceImpl implements UserService {
         String pwChanged = messageResolver.getMessage("user.password.changed");
         LOG.info(pwChanged);
         return new GenericResponse(pwChanged);
+    }
+
+    @Override
+    public void assignAuthorRole(UUID userId) {
+        User u = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageResolver.getMessage("entity.not-found", "User", userId)
+                ));
+
+        Role r = roleRepository.findByNameIgnoreCase(AUTHOR_ROLE_NAME)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageResolver.getMessage("entity.not-found", "Role", AUTHOR_ROLE_NAME)
+                ));
+
+        Set<Role> roles = u.getRoles();
+        roles.add(r);
+        u.setRoles(roles);
+        userRepository.save(u);
     }
 }

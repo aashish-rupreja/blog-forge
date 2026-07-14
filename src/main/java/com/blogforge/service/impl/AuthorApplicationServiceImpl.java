@@ -3,16 +3,21 @@ package com.blogforge.service.impl;
 import com.blogforge.dto.authorapplication.AuthorApplicationResponse;
 import com.blogforge.dto.authorapplication.CreateAuthorApplicationRequest;
 import com.blogforge.dto.authorapplication.MyAuthorApplicationsRequest;
+import com.blogforge.dto.authorapplication.UpdateAuthorApplicationRequest;
 import com.blogforge.entity.AuthorApplication;
 import com.blogforge.entity.AuthorApplicationStatus;
+import com.blogforge.entity.User;
 import com.blogforge.exception.AuthorApplicationAlreadyExistsException;
+import com.blogforge.exception.AuthorApplicationTransitionException;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.mapper.AuthorApplicationMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.AuthorApplicationRepository;
+import com.blogforge.repository.UserRepository;
 import com.blogforge.service.AuthorApplicationService;
+import com.blogforge.service.UserService;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecification;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecificationParams;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,14 +38,17 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
 
     private final AuthorApplicationRepository authorApplicationRepository;
     private final AuthorApplicationMapper authorApplicationMapper;
+    private final UserService userService;
 
     private final MessageResolver messageResolver;
 
     public AuthorApplicationServiceImpl(
             AuthorApplicationRepository authorApplicationRepository,
+            UserService userService,
             AuthorApplicationMapper authorApplicationMapper,
             MessageResolver messageResolver) {
         this.authorApplicationRepository = authorApplicationRepository;
+        this.userService = userService;
         this.authorApplicationMapper = authorApplicationMapper;
         this.messageResolver = messageResolver;
     }
@@ -131,6 +139,45 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
                 )));
 
         return authorApplicationMapper.fromEntityToResponse(aa);
+    }
+
+    @Override
+    public AuthorApplicationResponse approveApplication(UUID id, UpdateAuthorApplicationRequest dto) {
+        AuthorApplication aa = authorApplicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
+                        "entity.not-found",
+                        "Author Application", id.toString()
+                )));
+
+        if(!aa.getStatus().canTransitionTo(AuthorApplicationStatus.APPROVED.toString())) {
+            String illegalTransition = messageResolver.getMessage("author.application.illegal-transition", aa.getStatus().toString(), AuthorApplicationStatus.APPROVED.toString());
+            throw new AuthorApplicationTransitionException(illegalTransition);
+        }
+
+        aa.setStatus(AuthorApplicationStatus.APPROVED);
+        aa.setReviewerRemarks(dto.reviewerRemarks());
+        userService.assignAuthorRole(aa.getApplicant().getUuid());
+        AuthorApplication saved = authorApplicationRepository.save(aa);
+        return authorApplicationMapper.fromEntityToResponse(saved);
+    }
+
+    @Override
+    public AuthorApplicationResponse rejectApplication(UUID id, UpdateAuthorApplicationRequest dto) {
+        AuthorApplication aa = authorApplicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
+                        "entity.not-found",
+                        "Author Application", id.toString()
+                )));
+
+        if(!aa.getStatus().canTransitionTo(AuthorApplicationStatus.REJECTED.toString())) {
+            String illegalTransition = messageResolver.getMessage("author.application.illegal-transition", aa.getStatus().toString(), AuthorApplicationStatus.REJECTED.toString());
+            throw new AuthorApplicationTransitionException(illegalTransition);
+        }
+
+        aa.setStatus(AuthorApplicationStatus.REJECTED);
+        aa.setReviewerRemarks(dto.reviewerRemarks());
+        AuthorApplication saved = authorApplicationRepository.save(aa);
+        return authorApplicationMapper.fromEntityToResponse(saved);
     }
 
 
