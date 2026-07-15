@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
     private final String USER_ROLE_NAME = "ROLE_USER";
     private final String AUTHOR_ROLE_NAME = "ROLE_AUTHOR";
 
-    private final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
