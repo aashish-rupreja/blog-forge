@@ -32,7 +32,7 @@ import java.util.Set;
 @Service
 public class RoleServiceImpl implements RoleService {
 
-    private final Logger LOG = LoggerFactory.getLogger(RoleServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RoleServiceImpl.class);
 
     private final RoleRepository roleRepository;
     private final RoleMapper roleMapper;
