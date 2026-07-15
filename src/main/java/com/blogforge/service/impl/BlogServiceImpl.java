@@ -6,6 +6,7 @@ import com.blogforge.dto.blog.BlogSummaryResponse;
 import com.blogforge.dto.blog.CreateBlogRequest;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
+import com.blogforge.dto.reaction.AddReactionRequest;
 import com.blogforge.entity.*;
 import com.blogforge.exception.IllegalBlogTransitionException;
 import com.blogforge.exception.MessageResolver;
@@ -15,6 +16,7 @@ import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.*;
+import com.blogforge.security.CustomUserDetails;
 import com.blogforge.service.BlogService;
 import com.blogforge.specification.blog.BlogSpecification;
 import com.blogforge.specification.blog.BlogSpecificationParams;
@@ -43,6 +45,7 @@ public class BlogServiceImpl implements BlogService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
+    private final ReactionRepository reactionRepository;
     private final BlogMapper blogMapper;
     private final CommentMapper commentMapper;
     private final MessageResolver messageResolver;
@@ -53,6 +56,7 @@ public class BlogServiceImpl implements BlogService {
             CategoryRepository categoryRepository,
             TagRepository tagRepository,
             UserRepository userRepository,
+            ReactionRepository reactionRepository,
             BlogMapper blogMapper,
             CommentMapper commentMapper,
             MessageResolver messageResolver) {
@@ -61,6 +65,7 @@ public class BlogServiceImpl implements BlogService {
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.userRepository = userRepository;
+        this.reactionRepository = reactionRepository;
         this.blogMapper = blogMapper;
         this.commentMapper = commentMapper;
         this.messageResolver = messageResolver;
@@ -233,6 +238,37 @@ public class BlogServiceImpl implements BlogService {
     public GenericResponse hardDelete(List<UUID> uuids) {
         blogRepository.deleteAllById(uuids);
         return new GenericResponse("Blogs Deleted!");
+    }
+
+    @Override
+    public GenericResponse like(String slug, AddReactionRequest dto, CustomUserDetails principal) {
+        Blog blog = blogRepository.findBySlugIgnoreCase(slug)
+                .orElseThrow(() -> {
+                    String notFound = messageResolver.getMessage("entity.not-found", "Blog", slug);
+                    return new EntityNotFoundException(notFound);
+                });
+
+        Optional<Reaction> check = reactionRepository.findByReactor_UsernameAndBlog_Slug(principal.getUsername(), slug);
+
+        // if blog already has Like/Dislike and user reacts Like/Dislike again remove reaction
+        if(check.isPresent()) {
+
+            if(check.get().getReactionType() == dto.reactionType()) {
+                reactionRepository.delete(check.get());
+            } else {
+                check.get().setReactionType(dto.reactionType());
+                reactionRepository.save(check.get());
+            }
+        } else {
+            Reaction reaction = new Reaction();
+            reaction.setBlog(blog);
+            reaction.setReactor(principal.getUser());
+            reaction.setReactionType(dto.reactionType());
+            reactionRepository.save(reaction);
+        }
+
+        return new GenericResponse("reaction updated");
+
     }
 
     private void addCategoriesIfValid(Blog b, Set<String> incomingCategories) {

@@ -7,6 +7,7 @@ import com.blogforge.dto.blog.CreateBlogRequest;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.dto.comment.CreateCommentRequest;
+import com.blogforge.dto.reaction.AddReactionRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.security.CustomUserDetails;
@@ -17,8 +18,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -99,6 +98,15 @@ public class BlogController {
     @DeleteMapping(path = "/api/v1/blogs/hard-delete")
     public ResponseEntity<GenericResponse> hardDelete(@RequestBody List<UUID> uuids) {
         GenericResponse gr = blogService.hardDelete(uuids);
+        return new ResponseEntity<>(gr, HttpStatus.OK);
+    }
+
+    @PostMapping("/api/v1/blogs/{slug}/like")
+    public ResponseEntity<GenericResponse> like(
+            @PathVariable String slug,
+            @RequestBody AddReactionRequest dto,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        GenericResponse gr = blogService.like(slug, dto, principal);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
