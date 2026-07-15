@@ -2,6 +2,7 @@ package com.blogforge.service.impl;
 
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.dto.comment.CreateCommentRequest;
+import com.blogforge.dto.comment.UpdateCommentRequest;
 import com.blogforge.entity.Blog;
 import com.blogforge.entity.Comment;
 import com.blogforge.entity.User;
@@ -19,7 +20,10 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class CommentServiceImpl implements CommentService {
@@ -70,5 +74,25 @@ public class CommentServiceImpl implements CommentService {
         Comment saved = commentRepository.save(c);
 
         return commentMapper.fromEntityToResponse(saved);
+    }
+
+    @Override
+    public CommentResponse partialUpdate(UUID commentId, UpdateCommentRequest dto, String commentOwnerUsername) {
+        Comment c = commentRepository.findById(commentId)
+                .orElseThrow(() -> {
+                    String commentNotFoundMsg = messageResolver.getMessage(
+                            "entity.not-found",
+                            "Comment", commentId
+                    );
+                    return new EntityNotFoundException(commentNotFoundMsg);
+                });
+        if(!c.getOwner().getUsername().equals(commentOwnerUsername)) {
+            String accessDeniedMsg = messageResolver.getMessage("comment-edit.access-denied");
+            throw new AccessDeniedException(accessDeniedMsg);
+        }
+        c.setContent(dto.content());
+        Comment saved = commentRepository.save(c);
+        return commentMapper.fromEntityToResponse(saved);
+
     }
 }

@@ -2,10 +2,13 @@ package com.blogforge.service;
 
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.dto.comment.CreateCommentRequest;
+import com.blogforge.dto.comment.UpdateCommentRequest;
 import com.blogforge.entity.User;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.comment.CommentSpecificationParams;
+
+import java.util.UUID;
 
 public interface CommentService {
 
@@ -16,4 +19,9 @@ public interface CommentService {
             CreateCommentRequest dto,
             User commentor
     );
+
+    CommentResponse partialUpdate(
+            UUID commentId,
+            UpdateCommentRequest dto,
+            String commentOwnerUsername);
 }
