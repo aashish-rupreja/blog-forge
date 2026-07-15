@@ -6,11 +6,13 @@ import com.blogforge.dto.authorapplication.MyAuthorApplicationsRequest;
 import com.blogforge.dto.authorapplication.UpdateAuthorApplicationRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
+import com.blogforge.security.CustomUserDetails;
 import com.blogforge.service.AuthorApplicationService;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecificationParams;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -42,15 +44,18 @@ public class AuthorApplicationController {
     @GetMapping(path = "/api/v1/me/author-applications")
     public ResponseEntity<PagedResponse<AuthorApplicationResponse>> getMyAuthorApplications(
             @ModelAttribute PaginationRequestParams reqParams,
-            @ModelAttribute MyAuthorApplicationsRequest specParams
-    ) {
-        PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getMyAuthorApplications(reqParams, specParams);
+            @ModelAttribute MyAuthorApplicationsRequest specParams,
+            @AuthenticationPrincipal CustomUserDetails principal
+            ) {
+        PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getMyAuthorApplications(reqParams, specParams, principal.getUsername());
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
     @PostMapping(path = "/api/v1/author-applications")
-    public ResponseEntity<AuthorApplicationResponse> create(@Valid @RequestBody CreateAuthorApplicationRequest dto) {
-        AuthorApplicationResponse aar = authorApplicationService.create(dto);
+    public ResponseEntity<AuthorApplicationResponse> create(
+            @Valid @RequestBody CreateAuthorApplicationRequest dto,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        AuthorApplicationResponse aar = authorApplicationService.create(dto, principal.getUsername());
         return new ResponseEntity<>(aar, HttpStatus.CREATED);
     }
 
