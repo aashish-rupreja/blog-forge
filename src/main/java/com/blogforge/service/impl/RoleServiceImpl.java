@@ -103,11 +103,15 @@ public class RoleServiceImpl implements RoleService {
         LOG.info("Attempting to delete Role \"{}\"", name);
 
         Role role = findRoleOrThrow(name);
+        if(role.getRoleType() == RoleType.SYSTEM) {
+            String deleteNotAllowedMsg = messageResolver.getMessage("role.system.delete.not-allowed", name);
+            throw new IllegalArgumentException(deleteNotAllowedMsg);
+        }
         roleRepository.delete(role);
 
-        String deletedMsg = "Role \"##\" deleted".replaceAll("##", name);
-        LOG.info(deletedMsg);
-        return new GenericResponse(deletedMsg);
+        String deleteMsg = messageResolver.getMessage("entity.delete.success", "1", "Role");
+        LOG.info(deleteMsg);
+        return new GenericResponse(deleteMsg);
     }
 
     @Override
@@ -148,13 +152,12 @@ public class RoleServiceImpl implements RoleService {
                     LOG.debug(notFoundMessage);
                     return new EntityNotFoundException(notFoundMessage);
                 });
-        LOG.debug("Role \"{}\" found", name);
         return role;
     }
 
     private String normalizeRoleName(String name) {
         name = name.toUpperCase();
-        if (!name.startsWith("ROLE")) name = "ROLE_" + name;
+        name = (!name.startsWith("ROLE_")) ? name : "ROLE_" + name;
         return name;
     }
 }
