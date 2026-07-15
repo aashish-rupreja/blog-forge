@@ -65,8 +65,10 @@ public class AuthorController {
     }
 
     @DeleteMapping(path = "/api/v1/authors/{authorName}/follow")
-    public ResponseEntity<GenericResponse> unfollowAuthor(@PathVariable String authorName) {
-        GenericResponse gr = followService.delete(authorName);
+    public ResponseEntity<GenericResponse> unfollowAuthor(
+            @PathVariable String authorName,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        GenericResponse gr = followService.delete(authorName, principal.getUsername());
         return new ResponseEntity<>(gr, HttpStatus.CREATED);
     }
 }

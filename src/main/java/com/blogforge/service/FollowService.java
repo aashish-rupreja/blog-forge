@@ -6,5 +6,5 @@ public interface FollowService {
 
     GenericResponse create(String username);
 
-    GenericResponse delete(String username);
+    GenericResponse delete(String username, String authenticatedUsername);
 }
