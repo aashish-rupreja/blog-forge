@@ -38,7 +38,7 @@ public class BlogController {
     public ResponseEntity<PagedResponse<BlogSummaryResponse>> getAllSummary(
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute BlogSpecificationParams specParams
-            ) {
+    ) {
 
         PagedResponse<BlogSummaryResponse> blogs = blogService.getAllSummary(reqParams, specParams);
         return new ResponseEntity<>(blogs, HttpStatus.OK);
@@ -55,15 +55,18 @@ public class BlogController {
     public ResponseEntity<PagedResponse<CommentResponse>> getBlogComments(
             @PathVariable String slug,
             @ModelAttribute PaginationRequestParams reqParams
-            ) {
+    ) {
         PagedResponse<CommentResponse> comments = blogService.getBlogComments(slug, reqParams);
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 
     // following operations are only allowed to the author of the blog, authorization will be added later
     @PatchMapping(path = "/api/v1/blogs/{slug}")
-    public ResponseEntity<BlogDetailsResponse> partialUpdate(@PathVariable String slug, @RequestBody UpdateBlogRequest updateBlogRequest) {
-        BlogDetailsResponse bdr = blogService.partialUpdate(slug, updateBlogRequest);
+    public ResponseEntity<BlogDetailsResponse> partialUpdate(
+            @PathVariable String slug,
+            @RequestBody UpdateBlogRequest updateBlogRequest,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        BlogDetailsResponse bdr = blogService.partialUpdate(slug, updateBlogRequest, principal);
         return new ResponseEntity<>(bdr, HttpStatus.OK);
     }
 
@@ -74,14 +77,21 @@ public class BlogController {
     }
 
     @GetMapping(path = "/api/v1/blogs/own")
-    public ResponseEntity<PagedResponse<BlogSummaryResponse>> getMyBlogs(@ModelAttribute PaginationRequestParams reqParams) {
-        PagedResponse<BlogSummaryResponse> myBlogs = blogService.getMyBlogs(reqParams);
+    public ResponseEntity<PagedResponse<BlogSummaryResponse>> getMyBlogs(
+            @ModelAttribute PaginationRequestParams reqParams,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        String username = (principal != null) ? principal.getUsername() : null;
+        PagedResponse<BlogSummaryResponse> myBlogs = blogService.getMyBlogs(reqParams, username);
         return new ResponseEntity<>(myBlogs, HttpStatus.OK);
     }
 
     @PostMapping(path = "/api/v1/blogs")
-    public ResponseEntity<BlogDetailsResponse> create(@Valid @RequestBody CreateBlogRequest dto) {
-        BlogDetailsResponse blogResponse = blogService.create(dto);
+    public ResponseEntity<BlogDetailsResponse> create(
+            @Valid @RequestBody CreateBlogRequest dto,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        String username = (principal != null) ? principal.getUsername() : null;
+        BlogDetailsResponse blogResponse = blogService.create(dto, username);
         return new ResponseEntity<>(blogResponse, HttpStatus.CREATED);
     }
 
