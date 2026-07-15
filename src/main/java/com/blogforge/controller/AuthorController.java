@@ -1,5 +1,6 @@
 package com.blogforge.controller;
 
+import com.blogforge.dto.AuthorProfileResponse;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
@@ -10,6 +11,8 @@ import com.blogforge.service.FollowService;
 import com.blogforge.specification.user.UserSpecificationParams;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,9 +38,16 @@ public class AuthorController {
     }
 
     @GetMapping(path = "/api/v1/authors/{username}")
-    public ResponseEntity<UserProfileResponse> getAuthorProfile(@PathVariable String username) {
-        UserProfileResponse upr = authorService.getAuthorProfile(username);
-        return new ResponseEntity<>(upr, HttpStatus.OK);
+    public ResponseEntity<AuthorProfileResponse> getAuthorProfile(
+            @PathVariable String username,
+            @AuthenticationPrincipal UserDetails principal) {
+
+        String authenticatedUsername = (principal != null)
+                ? principal.getUsername()
+                : null;
+
+        AuthorProfileResponse apr = authorService.getAuthorProfile(username, authenticatedUsername);
+        return new ResponseEntity<>(apr, HttpStatus.OK);
     }
 
     @PostMapping(path = "/api/v1/authors/{username}/follow")

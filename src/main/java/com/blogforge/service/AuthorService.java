@@ -1,5 +1,6 @@
 package com.blogforge.service;
 
+import com.blogforge.dto.AuthorProfileResponse;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
@@ -11,5 +12,5 @@ public interface AuthorService {
 
     PagedResponse<UserSummaryResponse> getAllAuthorSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams);
 
-    UserProfileResponse getAuthorProfile(String username);
+    AuthorProfileResponse getAuthorProfile(String username, String authenticatedPrincipalUsername);
 }

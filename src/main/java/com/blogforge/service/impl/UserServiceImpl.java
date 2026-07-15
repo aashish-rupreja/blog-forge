@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
             throw new EntityNotFoundException(notExistsMessage);
         }
         LOG.debug("Found user \"{}\"", username);
-        return userMapper.fromEntityToProfileResponse(user.get());
+        return userMapper.fromEntityToUserProfileResponse(user.get());
     }
 
     @Override
@@ -119,7 +119,7 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(u);
 
         LOG.info("User \"{}\" created", saved.getUsername());
-        return userMapper.fromEntityToProfileResponse(saved);
+        return userMapper.fromEntityToUserProfileResponse(saved);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class UserServiceImpl implements UserService {
 
         User saved = userRepository.save(toUpdate);
         LOG.info("User \"{}\" updated", dto.username());
-        return userMapper.fromEntityToProfileResponse(saved);
+        return userMapper.fromEntityToUserProfileResponse(saved);
     }
 
     @Override
