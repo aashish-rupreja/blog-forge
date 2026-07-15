@@ -23,13 +23,15 @@ public interface BlogService {
 
     PagedResponse<CommentResponse> getBlogComments(String slug, PaginationRequestParams requestParams);
 
-    BlogDetailsResponse partialUpdate(String slug, UpdateBlogRequest updateBlogRequest);
+    BlogDetailsResponse partialUpdate(String slug,
+                                      UpdateBlogRequest updateBlogRequest,
+                                      CustomUserDetails principal);
 
     GenericResponse delete(String slug);
 
-    PagedResponse<BlogSummaryResponse> getMyBlogs(PaginationRequestParams reqParams);
+    PagedResponse<BlogSummaryResponse> getMyBlogs(PaginationRequestParams reqParams, String currentAuthenticatedUsername);
 
-    BlogDetailsResponse create(CreateBlogRequest dto);
+    BlogDetailsResponse create(CreateBlogRequest dto, String currentAuthenticatedUsername);
 
     GenericResponse hardDelete(List<UUID> uuids);
 

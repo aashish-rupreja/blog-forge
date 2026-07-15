@@ -13,16 +13,19 @@ import com.blogforge.repository.UserRepository;
 import com.blogforge.service.AuthorService;
 import com.blogforge.specification.user.UserSpecification;
 import com.blogforge.specification.user.UserSpecificationParams;
+import com.blogforge.constants.Constants;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthorServiceImpl implements AuthorService {
-    private final String ROLE_AUTHOR = "ROLE_AUTHOR";
+
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorServiceImpl.class);
 
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
@@ -46,12 +49,12 @@ public class AuthorServiceImpl implements AuthorService {
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
 
         Specification<User> spec = UserSpecification.handleSpecs(specParams);
-        spec = spec.and(UserSpecification.hasRole(ROLE_AUTHOR));
+        spec = spec.and(UserSpecification.hasRole(Constants.AUTHOR_ROLE_NAME));
 
         Page<User> authors = userRepository.findAll(spec, jpaPageable);
         return new PagedResponse<>(
                 authors.stream().map(userMapper::fromEntityToSummaryResponse).toList(),
-                authors.getNumber()+1,
+                authors.getNumber() + 1,
                 authors.getNumberOfElements(),
                 authors.getTotalPages(),
                 authors.getTotalElements(),
@@ -62,17 +65,19 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public AuthorProfileResponse getAuthorProfile(String username, String authenticatedPrincipalUsername) {
-        User author = userRepository.findByUsernameAndRoles_Name(username, ROLE_AUTHOR)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        messageResolver.getMessage("entity.not-found", "Author", username)
-                ));
+        User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
+                .orElseThrow(() -> {
+                    String authorNotFound = messageResolver.getMessage("entity.not-found", "Author", username);
+                    LOG.warn(authorNotFound);
+                    return new EntityNotFoundException(authorNotFound);
+                });
 
         boolean isFollowing = false;
-        if(authenticatedPrincipalUsername != null) {
-                isFollowing = followRepository.existsByFollower_UsernameAndFollowing_Username(
-                        authenticatedPrincipalUsername,
-                        author.getUsername()
-                );
+        if (authenticatedPrincipalUsername != null) {
+            isFollowing = followRepository.existsByFollower_UsernameAndFollowing_Username(
+                    authenticatedPrincipalUsername,
+                    author.getUsername()
+            );
         }
 
         return userMapper.fromEntityToAuthorProfileResponse(author, isFollowing);
@@ -80,10 +85,12 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public AuthorProfileResponse getMyProfile(String username) {
-        User author = userRepository.findByUsernameAndRoles_Name(username, ROLE_AUTHOR)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        messageResolver.getMessage("entity.not-found", "Author", username)
-                ));
+        User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
+                .orElseThrow(() -> {
+                    String authorNotFound = messageResolver.getMessage("entity.not-found", "Author", username);
+                    LOG.warn(authorNotFound);
+                    return new EntityNotFoundException(authorNotFound);
+                });
 
         return userMapper.fromEntityToAuthorProfileResponse(author, false);
     }

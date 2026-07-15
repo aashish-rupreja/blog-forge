@@ -12,21 +12,19 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.TagRepository;
 import com.blogforge.service.TagService;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.EntityExistsException;
-
-import java.util.Optional;
 
 @Service
 public class TagServiceImpl implements TagService {
 
-    private final Logger LOG = LoggerFactory.getLogger(TagServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TagServiceImpl.class);
 
     private final TagRepository tagRepository;
     private final TagMapper tagMapper;
@@ -44,7 +42,7 @@ public class TagServiceImpl implements TagService {
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
 
         Page<Tag> tags = null;
-        if(tagName != null) {
+        if (tagName != null) {
             tags = tagRepository.findByNameContaining(jpaPageable, tagName);
         } else {
             tags = tagRepository.findAll(jpaPageable);
@@ -52,7 +50,7 @@ public class TagServiceImpl implements TagService {
 
         return new PagedResponse<>(
                 tags.stream().map(tagMapper::fromEntityToResponse).toList(),
-                tags.getNumber()+1,
+                tags.getNumber() + 1,
                 tags.getSize(),
                 (int) tags.getTotalElements(),
                 tags.getTotalPages(),
@@ -73,31 +71,35 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional
     public TagResponse create(CreateTagRequest tagRequest) {
-        LOG.debug("Attempting to create Tag \"{}\"", tagRequest.name());
-        Optional<Tag> t = tagRepository.findByNameIgnoreCase(tagRequest.name());
-        if(t.isPresent()) {
-            LOG.debug("Tag \"{}\" already exists", tagRequest.name());
-            throw new EntityExistsException(messageResolver.getMessage(
-                    "entity.already-exists",
-                    "Tag", tagRequest.name()));
-        }
+        LOG.info("Attempting to create Tag \"{}\"", tagRequest.name());
+
+        Tag tag = tagRepository.findByNameIgnoreCase(tagRequest.name())
+                .orElseThrow(() -> {
+                    String alreadyExists = messageResolver.getMessage("entity.already-exists",
+                            "Tag", tagRequest.name());
+                    LOG.debug(alreadyExists);
+                    return new EntityExistsException(alreadyExists);
+                });
+
         Tag saved = tagRepository.save(tagMapper.fromCreateRequestToEntity(tagRequest));
-        LOG.debug("Tag \"{}\" created", tagRequest.name());
         return tagMapper.fromEntityToResponse(saved);
     }
 
     @Override
+    @Transactional
     public GenericResponse delete(DeleteTagRequest tagRequest) {
-        LOG.debug("Attempting to delete Tag \"{}\"", tagRequest.name());
-        Optional<Tag> t = tagRepository.findByNameIgnoreCase(tagRequest.name());
-        if(t.isEmpty()) {
-            String notExistsMessage = messageResolver.getMessage("entity.not-found", "Tag",tagRequest.name());
-            LOG.debug(notExistsMessage);
-            throw new EntityNotFoundException(notExistsMessage);
-        }
-        tagRepository.delete(t.get());
+        LOG.info("Attempting to delete Tag \"{}\"", tagRequest.name());
+
+        Tag tag = tagRepository.findByNameIgnoreCase(tagRequest.name())
+                .orElseThrow(() -> {
+                    String notExistsMessage = messageResolver.getMessage("entity.not-found", "Tag", tagRequest.name());
+                    LOG.debug(notExistsMessage);
+                    return new EntityNotFoundException(notExistsMessage);
+                });
+
+        tagRepository.delete(tag);
         String deleteMessage = "Tag \"##\" deleted".replace("##", tagRequest.name());
-        LOG.debug(deleteMessage);
+        LOG.info(deleteMessage);
         return new GenericResponse(deleteMessage);
     }
 }

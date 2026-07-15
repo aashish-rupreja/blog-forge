@@ -24,12 +24,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
-    private final Logger LOG = LoggerFactory.getLogger(CategoryServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CategoryServiceImpl.class);
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -78,29 +76,31 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryResponse create(CreateCategoryRequest dto) {
         String categoryName = dto.name().trim();
-        LOG.debug("Attempting to create Category \"{}\"", categoryName);
-        Optional<Category> c = categoryRepository.findByNameIgnoreCase(dto.name());
-        if(c.isPresent()) {
-            String existsMessage = messageResolver.getMessage("entity.already-exists", "Category", categoryName);
-            LOG.debug(existsMessage);
-            throw new EntityExistsException(existsMessage);
-        }
+        LOG.info("Attempting to create Category \"{}\"", categoryName);
+        Category c = categoryRepository.findByNameIgnoreCase(dto.name())
+                .orElseThrow(() -> {
+                    String existsMessage = messageResolver.getMessage("entity.already-exists", "Category", categoryName);
+                    LOG.warn(existsMessage);
+                    return new EntityExistsException(existsMessage);
+                });
+
         Category saved = categoryRepository.save(categoryMapper.fromCreateRequestToEntity(dto));
-        LOG.debug("Category \"{}\" created", dto.name());
         return categoryMapper.fromEntityToResponse(saved);
     }
 
     @Override
+    @Transactional
     public GenericResponse delete(DeleteCategoryRequest dto) {
-        LOG.debug("Attempting to delete Category \"{}\"", dto.name());
-        Optional<Category> c = categoryRepository.findByNameIgnoreCase(dto.name());
-        if(c.isEmpty()) {
-            String notExistsMessage = messageResolver.getMessage("entity.not-found", "Category",dto.name());
-            LOG.debug(notExistsMessage);
-            throw new EntityNotFoundException(notExistsMessage);
-        }
-        categoryRepository.delete(c.get());
-        String deleteMessage = "Category \"##\" deleted".replace("##", dto.name());
+        LOG.info("Attempting to delete Category \"{}\"", dto.name());
+        Category c = categoryRepository.findByNameIgnoreCase(dto.name())
+                .orElseThrow(() -> {
+                    String existsMessage = messageResolver.getMessage("entity.already-exists", "Category", dto.name());
+                    LOG.warn(existsMessage);
+                    return new EntityExistsException(existsMessage);
+                });
+
+        categoryRepository.delete(c);
+        String deleteMessage = messageResolver.getMessage("entity.delete.success", "Category", c.getName());
         LOG.debug(deleteMessage);
         return new GenericResponse(deleteMessage);
     }

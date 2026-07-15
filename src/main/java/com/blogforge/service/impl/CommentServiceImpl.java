@@ -19,6 +19,9 @@ import com.blogforge.service.CommentService;
 import com.blogforge.specification.comment.CommentSpecification;
 import com.blogforge.specification.comment.CommentSpecificationParams;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,6 +32,8 @@ import java.util.UUID;
 
 @Service
 public class CommentServiceImpl implements CommentService {
+
+    private final static Logger LOG = LoggerFactory.getLogger(CommentServiceImpl.class);
 
     private final CommentRepository commentRepository;
     private final BlogRepository blogRepository;
@@ -61,6 +66,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentResponse addComment(String slug, CreateCommentRequest dto, User commentor) {
         Comment c = commentMapper.fromCreateRequestToEntity(dto);
         c.setOwner(commentor);
@@ -70,6 +76,7 @@ public class CommentServiceImpl implements CommentService {
                     String blogNotFoundMsg = messageResolver.getMessage(
                             "entity.not-found",
                             "Blog", slug);
+                    LOG.warn(blogNotFoundMsg);
                     return new EntityNotFoundException(blogNotFoundMsg);
                 });
         c.setBlog(b);
@@ -86,10 +93,12 @@ public class CommentServiceImpl implements CommentService {
                             "entity.not-found",
                             "Comment", commentId
                     );
+                    LOG.warn(commentNotFoundMsg);
                     return new EntityNotFoundException(commentNotFoundMsg);
                 });
         if(!c.getOwner().getUsername().equals(commentOwnerUsername)) {
-            String accessDeniedMsg = messageResolver.getMessage("comment-edit.access-denied");
+            String accessDeniedMsg = messageResolver.getMessage("comment.edit.access-denied");
+            LOG.warn(accessDeniedMsg);
             throw new AccessDeniedException(accessDeniedMsg);
         }
         c.setContent(dto.content());
@@ -99,6 +108,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public GenericResponse delete(UUID id, CustomUserDetails principal) {
         Comment c = commentRepository.findById(id)
                 .orElseThrow(() -> {
@@ -106,6 +116,7 @@ public class CommentServiceImpl implements CommentService {
                             "entity.not-found",
                             "Comment", id
                     );
+                    LOG.warn(commentNotFoundMsg);
                     return new EntityNotFoundException(commentNotFoundMsg);
                 });
 
@@ -114,10 +125,8 @@ public class CommentServiceImpl implements CommentService {
         // delete requested by comment owner
         boolean isCommentOwner = c.getOwner().getUsername().equals(principal.getUsername());
 
-
         // delete requested by blog author
         boolean isBlogAuthor = c.getBlog().getAuthor().getUsername().equals(principal.getUsername());
-
 
         // delete requested by admin
         boolean isAdmin = principal.getAuthorities()
@@ -125,9 +134,12 @@ public class CommentServiceImpl implements CommentService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if(!(isCommentOwner || isBlogAuthor || isAdmin)) {
-            throw new AccessDeniedException(messageResolver.getMessage("comment-delete.access-denied"));
+            String deleteAccessDenied = messageResolver.getMessage("comment.delete.access-denied");
+            LOG.warn(deleteAccessDenied);
+            throw new AccessDeniedException(deleteAccessDenied);
         }
         commentRepository.delete(c);
+        LOG.info("Comment identified by {} is deleted", c.getUuid());
         return new GenericResponse(messageResolver.getMessage("comment.delete.msg"));
     }
 }

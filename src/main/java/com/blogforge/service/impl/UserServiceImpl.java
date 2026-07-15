@@ -1,5 +1,6 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.constants.Constants;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.user.*;
 import com.blogforge.entity.Role;
@@ -23,21 +24,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final String USER_ROLE_NAME = "ROLE_USER";
-    private final String AUTHOR_ROLE_NAME = "ROLE_AUTHOR";
-
-    private final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -66,7 +62,7 @@ public class UserServiceImpl implements UserService {
         Page<User> users = userRepository.findAll(userSpec, jpaPageable);
         return new PagedResponse<>(
                 users.getContent().stream().map(userMapper::fromEntityToSummaryResponse).toList(),
-                users.getNumber()+1,
+                users.getNumber() + 1,
                 users.getNumberOfElements(),
                 users.getTotalPages(),
                 users.getTotalElements(),
@@ -77,46 +73,40 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserProfileResponse getUserProfile(String username) {
-        LOG.debug("Attempting to fetch profile for \"{}\"", username);
-        Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
-        if(user.isEmpty()) {
-            String notExistsMessage = messageResolver.getMessage("entity.not-found", "User", username);
-            LOG.debug(notExistsMessage);
-            throw new EntityNotFoundException(notExistsMessage);
-        }
-        LOG.debug("Found user \"{}\"", username);
-        return userMapper.fromEntityToUserProfileResponse(user.get());
+        User user = getUserOrThrow(username);
+        return userMapper.fromEntityToUserProfileResponse(user);
     }
 
     @Override
     @Transactional
     public UserProfileResponse create(CreateUserRequest dto) {
-        LOG.info("Attempting to create user \"{}\"", dto.username());
+        LOG.info("Attempting to register user \"{}\"", dto.username());
 
-        Optional<User> checkByUsername = userRepository.findByUsernameIgnoreCase(dto.username());
-        if(checkByUsername.isPresent()) {
+        boolean isExistsUsername = userRepository.existsByUsernameIgnoreCase(dto.username());
+        if (isExistsUsername) {
             String alreadyExists = messageResolver.getMessage("entity.already-exists", "User with username", dto.username());
             LOG.warn(alreadyExists);
             throw new EntityExistsException(alreadyExists);
         }
 
-        Optional<User> checkByEmail = userRepository.findByEmailIgnoreCase(dto.email());
-        if(checkByEmail.isPresent()) {
+        boolean isExistsEmail = userRepository.existsByEmailIgnoreCase(dto.email());
+        if (isExistsEmail) {
             String alreadyExists = messageResolver.getMessage("entity.already-exists", "User with email", dto.email());
             LOG.warn(alreadyExists);
             throw new EntityExistsException(alreadyExists);
         }
 
-        Optional<Role> userRole = roleRepository.findByNameIgnoreCase(USER_ROLE_NAME);
-        if(userRole.isEmpty()) {
-            LOG.warn("User creation failed \"{}\" \"{}\" not found", dto.username(), USER_ROLE_NAME);
-            throw new EntityNotFoundException(messageResolver.getMessage("entity.not-found", "Role", USER_ROLE_NAME));
-        }
+        User user = userMapper.fromCreateRequestToEntity(dto);
 
-        User u = userMapper.fromCreateRequestToEntity(dto);
-        u.setRoles(Set.of(userRole.get()));
-        u.setPasswordHash(passwordEncoder.encode(u.getPasswordHash()));
-        User saved = userRepository.save(u);
+        Role userRole = roleRepository.findByNameIgnoreCase(Constants.USER_ROLE_NAME)
+                .orElseThrow(() -> {
+                    String notFoundMessage = messageResolver.getMessage("entity.not-found", "Role", Constants.USER_ROLE_NAME);
+                    LOG.debug(notFoundMessage);
+                    return new EntityNotFoundException(notFoundMessage);
+                });
+        user.setRoles(Set.of(userRole));
+        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        User saved = userRepository.save(user);
 
         LOG.info("User \"{}\" created", saved.getUsername());
         return userMapper.fromEntityToUserProfileResponse(saved);
@@ -124,98 +114,87 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserProfileResponse partialUpdate(UpdateUserRequest dto) {
-        String authenticatedUsername = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
+    public UserProfileResponse partialUpdate(UpdateUserRequest dto, String authenticatedUsername) {
         LOG.info("Attempting to update User \"{}\"", authenticatedUsername);
 
-        Optional<User> check = userRepository.findByUsernameIgnoreCase(authenticatedUsername);
-        if(check.isEmpty()) {
-            String notFound = messageResolver.getMessage("entity.not-found", "User with username", authenticatedUsername);
-            LOG.warn(notFound);
-            throw new EntityNotFoundException(notFound);
-        }
+        User toUpdate = getUserOrThrow(authenticatedUsername);
 
-        User toUpdate = check.get();
-        if(dto.firstName() != null) {
-            LOG.debug("Updating firstName from {} to {}", toUpdate.getFirstName(), dto.firstName());
+        if (dto.firstName() != null) {
             toUpdate.setFirstName(dto.firstName());
         }
-        if(dto.lastName() != null) {
-            LOG.debug("Updating lastName from {} to {}", toUpdate.getLastName(), dto.lastName());
+        if (dto.lastName() != null) {
             toUpdate.setLastName(dto.lastName());
         }
-        if(dto.username() != null) {
-            LOG.debug("Updating username from {} to {}", toUpdate.getUsername(), dto.username());
+        if (dto.username() != null) {
             toUpdate.setUsername(dto.username());
         }
-        if(dto.profilePicLink() != null) {
-            LOG.debug("Updating profilePicLink from {} to {}", toUpdate.getProfilePicLink(), dto.profilePicLink());
+        if (dto.profilePicLink() != null) {
             toUpdate.setProfilePicLink(dto.profilePicLink());
         }
-        if(dto.bio() != null) {
-            LOG.debug("Updating bio from {} to {}", toUpdate.getBio(), dto.bio());
+        if (dto.bio() != null) {
             toUpdate.setBio(dto.bio());
         }
 
         User saved = userRepository.save(toUpdate);
-        LOG.info("User \"{}\" updated", dto.username());
+        LOG.info("User \"{}\" updated", saved.getUsername());
         return userMapper.fromEntityToUserProfileResponse(saved);
     }
 
     @Override
     @Transactional
-    public GenericResponse changePassword(ChangePasswordRequest dto) {
-        String authenticatedUsername = SecurityContextHolder.getContext()
-                        .getAuthentication()
-                        .getName();
-
+    public GenericResponse changePassword(ChangePasswordRequest dto, String authenticatedUsername) {
         LOG.info("Attempting password update for User \"{}\"", authenticatedUsername);
 
-        Optional<User> check = userRepository.findByUsernameIgnoreCase(authenticatedUsername);
-        if(check.isEmpty()) {
-            String notFound = messageResolver.getMessage("entity.not-found", "User with username", authenticatedUsername);
-            LOG.warn(notFound);
-            throw new EntityNotFoundException(notFound);
-        }
+        User user = getUserOrThrow(authenticatedUsername);
 
-        User u = check.get();
-        if(!passwordEncoder.matches(dto.oldPassword(), u.getPasswordHash())) {
-            String oldPassMismatch = messageResolver.getMessage("user.password.mismatch-old");
+        if (!passwordEncoder.matches(dto.oldPassword(), user.getPasswordHash())) {
+            String oldPassMismatch = messageResolver.getMessage("user.password.invalid-old");
             LOG.warn(oldPassMismatch);
             throw new PasswordMismatchException(oldPassMismatch);
         }
 
-        if(!dto.newPassword().equals(dto.confirmNewPassword())) {
-            String newPassMismatch = messageResolver.getMessage("user.password.mismatch-new-confirm");
+        if (!dto.newPassword().equals(dto.confirmNewPassword())) {
+            String newPassMismatch = messageResolver.getMessage("user.password.confirmation-mismatch");
             LOG.warn(newPassMismatch);
             throw new PasswordMismatchException(newPassMismatch);
         }
 
-        u.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
-        User saved = userRepository.save(u);
+        user.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
         String pwChanged = messageResolver.getMessage("user.password.changed");
         LOG.info(pwChanged);
         return new GenericResponse(pwChanged);
     }
 
     @Override
+    @Transactional
     public void assignAuthorRole(UUID userId) {
-        User u = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageResolver.getMessage("entity.not-found", "User", userId)
                 ));
 
-        Role r = roleRepository.findByNameIgnoreCase(AUTHOR_ROLE_NAME)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        messageResolver.getMessage("entity.not-found", "Role", AUTHOR_ROLE_NAME)
-                ));
+        Role authorRole = roleRepository.findByNameIgnoreCase(Constants.AUTHOR_ROLE_NAME)
+                .orElseThrow(() -> {
+                    String notFoundMessage = messageResolver.getMessage("entity.not-found", "Role", Constants.AUTHOR_ROLE_NAME);
+                    LOG.debug(notFoundMessage);
+                    return new EntityNotFoundException(notFoundMessage);
+                });
 
-        Set<Role> roles = u.getRoles();
-        roles.add(r);
-        u.setRoles(roles);
-        userRepository.save(u);
+        Set<Role> roles = user.getRoles();
+        roles.add(authorRole);
+        user.setRoles(roles);
+        userRepository.save(user);
+        LOG.info("Granted {} to {}", Constants.AUTHOR_ROLE_NAME, user.getUsername());
+    }
+
+    public User getUserOrThrow(String username) {
+        LOG.debug("Attempting to fetch user \"{}\"", username);
+        return userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> {
+                    String notExistsMessage = messageResolver.getMessage("entity.not-found", "User", username);
+                    LOG.debug(notExistsMessage);
+                    return new EntityNotFoundException(notExistsMessage);
+                });
     }
 }

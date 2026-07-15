@@ -1,5 +1,6 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.constants.Constants;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.blog.BlogDetailsResponse;
 import com.blogforge.dto.blog.BlogSummaryResponse;
@@ -21,12 +22,13 @@ import com.blogforge.service.BlogService;
 import com.blogforge.specification.blog.BlogSpecification;
 import com.blogforge.specification.blog.BlogSpecificationParams;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -36,9 +38,7 @@ import java.util.stream.Collectors;
 @Service
 public class BlogServiceImpl implements BlogService {
 
-    private final String AUTHOR_ROLE_NAME = "ROLE_AUTHOR";
-
-    private final Logger LOG = LoggerFactory.getLogger(BlogServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BlogServiceImpl.class);
 
     private final BlogRepository blogRepository;
     private final CommentRepository commentRepository;
@@ -116,16 +116,33 @@ public class BlogServiceImpl implements BlogService {
         );
     }
 
-    public BlogDetailsResponse partialUpdate(String slug, UpdateBlogRequest updateBlogRequest) {
+    @Override
+    @Transactional
+    public BlogDetailsResponse partialUpdate(
+            String slug,
+            UpdateBlogRequest updateBlogRequest,
+            CustomUserDetails principal) {
+
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
-                .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
-                        "entity.not-found",
-                        "Blog", slug
-                )));
+                .orElseThrow(() -> {
+                    String blogNotFound = messageResolver.getMessage(
+                            "entity.not-found",
+                            "Blog", slug);
+                    LOG.warn(blogNotFound);
+                    return new EntityNotFoundException(blogNotFound);
+                });
+
+        boolean isBlogAuthor = b.getAuthor().getUsername().equals(principal.getUsername());
+
+        if (!(isBlogAuthor)) {
+            String accessDeniedMsg = messageResolver.getMessage("blog.delete.not-allowed");
+            LOG.warn(accessDeniedMsg);
+            throw new AccessDeniedException(accessDeniedMsg);
+        }
 
         if (updateBlogRequest.title() != null) {
             b.setTitle(updateBlogRequest.title());
-            b.setSlug(generateSlug(updateBlogRequest.title(), b.getAuthor().getUuid()));
+            b.setSlug(generateSlug(updateBlogRequest.title()));
         }
         if (updateBlogRequest.content() != null) {
             b.setContent(updateBlogRequest.content());
@@ -135,7 +152,9 @@ public class BlogServiceImpl implements BlogService {
         }
         if (updateBlogRequest.blogStatus() != null) {
             if (!b.getStatus().canTransitionTo(updateBlogRequest.blogStatus().toString())) {
-                throw new IllegalBlogTransitionException(messageResolver.getMessage("blog.transition.illegal", b.getStatus().toString(), updateBlogRequest.blogStatus().toString()));
+                String illegalTransitionMsg = messageResolver.getMessage("blog.transition.illegal", b.getStatus().toString(), updateBlogRequest.blogStatus().toString());
+                LOG.warn(illegalTransitionMsg);
+                throw new IllegalBlogTransitionException(illegalTransitionMsg);
             }
             b.setStatus(updateBlogRequest.blogStatus());
         }
@@ -152,6 +171,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional
     public GenericResponse delete(String slug) {
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
@@ -160,23 +180,24 @@ public class BlogServiceImpl implements BlogService {
                 )));
 
         if (!b.getStatus().canTransitionTo(BlogStatus.DELETED.toString())) {
-            throw new IllegalBlogTransitionException(messageResolver.getMessage("blog.transition.illegal", b.getStatus().toString(), BlogStatus.DELETED.toString()));
+            String illegalTransitionMsg = messageResolver.getMessage("blog.transition.illegal", b.getStatus().toString(), BlogStatus.DELETED.toString());
+            LOG.warn(illegalTransitionMsg);
+            throw new IllegalBlogTransitionException(illegalTransitionMsg);
         }
         b.setStatus(BlogStatus.DELETED);
         blogRepository.save(b);
-        String deleteMessage = messageResolver.getMessage("blog.blogStatus.deleted", b.getTitle());
+        String deleteMessage = messageResolver.getMessage("blog.status.deleted", b.getTitle());
         return new GenericResponse(deleteMessage);
     }
 
     @Override
-    public PagedResponse<BlogSummaryResponse> getMyBlogs(PaginationRequestParams reqParams) {
-        String currentAuthenticatedUser = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
+    public PagedResponse<BlogSummaryResponse> getMyBlogs(
+            PaginationRequestParams reqParams,
+            String currentAuthenticatedUsername) {
 
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
-        Page<Blog> myBlogs = blogRepository.findAllByAuthor_UsernameIgnoreCase(currentAuthenticatedUser, jpaPageable);
+        Page<Blog> myBlogs = blogRepository.findAllByAuthor_UsernameIgnoreCase(currentAuthenticatedUsername, jpaPageable);
 
         return new PagedResponse<>(
                 myBlogs.stream().map(blogMapper::fromEntityToSummaryResponse).toList(),
@@ -190,31 +211,17 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public BlogDetailsResponse create(CreateBlogRequest dto) {
+    @Transactional
+    public BlogDetailsResponse create(CreateBlogRequest dto, String currentAuthenticatedUsername) {
+        LOG.info("User {} attempting to create a new blog", currentAuthenticatedUsername);
         Blog b = blogMapper.fromCreateRequestToEntity(dto);
+        User author = userRepository.findByUsernameAndRoles_Name(currentAuthenticatedUsername, Constants.AUTHOR_ROLE_NAME)
+                .orElseThrow(() -> {
+                    String userNotFound = messageResolver.getMessage("entity.not-found", "Author", currentAuthenticatedUsername);
+                    LOG.warn(userNotFound);
+                    return new EntityNotFoundException(userNotFound);
+                });
 
-//        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
-//                        .getAuthentication()
-//                        .getName();
-
-        String currentAuthenticatedUsername = "bruce.banner";
-
-        Optional<User> check = userRepository.findByUsernameIgnoreCase(currentAuthenticatedUsername);
-        if (check.isEmpty()) {
-            String userNotFound = messageResolver.getMessage("entity.not-found", "User", currentAuthenticatedUsername);
-            throw new EntityNotFoundException(userNotFound);
-        }
-
-        Optional<Role> checkAuthor = check.get().getRoles()
-                .stream()
-                .filter(roleName -> roleName.getName().equals(AUTHOR_ROLE_NAME))
-                .findFirst();
-        if (checkAuthor.isEmpty()) {
-            String userNotAuthor = messageResolver.getMessage("user.not-author");
-            throw new IllegalStateException(userNotAuthor);
-        }
-
-        User author = check.get();
         b.setAuthor(author);
 
         // handle categories
@@ -225,39 +232,44 @@ public class BlogServiceImpl implements BlogService {
         b.setTags(tags);
 
         // add slug
-        String slug = generateSlug(b.getTitle(), author.getUuid());
+        String slug = generateSlug(b.getTitle());
         b.setSlug(slug);
 
-        if(b.getStatus() == BlogStatus.PUBLISHED) b.setPublishedAt(Instant.now());
+        if (b.getStatus() == BlogStatus.PUBLISHED) b.setPublishedAt(Instant.now());
 
         Blog saved = blogRepository.save(b);
+        LOG.info("Blog {} successfully created", b.getSlug());
         return blogMapper.fromEntityToDetailsResponse(saved);
     }
 
     @Override
+    @Transactional
     public GenericResponse hardDelete(List<UUID> uuids) {
         blogRepository.deleteAllById(uuids);
         return new GenericResponse("Blogs Deleted!");
     }
 
     @Override
+    @Transactional
     public GenericResponse like(String slug, AddReactionRequest dto, CustomUserDetails principal) {
         Blog blog = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> {
                     String notFound = messageResolver.getMessage("entity.not-found", "Blog", slug);
+                    LOG.warn(notFound);
                     return new EntityNotFoundException(notFound);
                 });
 
         Optional<Reaction> check = reactionRepository.findByReactor_UsernameAndBlog_Slug(principal.getUsername(), slug);
-
+        String reactionMsg = null;
         // if blog already has Like/Dislike and user reacts Like/Dislike again remove reaction
-        if(check.isPresent()) {
-
-            if(check.get().getReactionType() == dto.reactionType()) {
+        if (check.isPresent()) {
+            if (check.get().getReactionType() == dto.reactionType()) {
                 reactionRepository.delete(check.get());
+                reactionMsg = messageResolver.getMessage("blog.reaction.remove", dto.reactionType().toString(), slug);
             } else {
                 check.get().setReactionType(dto.reactionType());
                 reactionRepository.save(check.get());
+                reactionMsg = messageResolver.getMessage("blog.reaction.add", dto.reactionType().toString(), slug);
             }
         } else {
             Reaction reaction = new Reaction();
@@ -265,15 +277,14 @@ public class BlogServiceImpl implements BlogService {
             reaction.setReactor(principal.getUser());
             reaction.setReactionType(dto.reactionType());
             reactionRepository.save(reaction);
+            reactionMsg = messageResolver.getMessage("blog.reaction.add", dto.reactionType().toString(), slug);
         }
-
-        return new GenericResponse("reaction updated");
-
+        return new GenericResponse(reactionMsg);
     }
 
     private void addCategoriesIfValid(Blog b, Set<String> incomingCategories) {
         Collection<Category> knownCategories = categoryRepository.findByNameIn(incomingCategories);
-        if(knownCategories.size() != incomingCategories.size()) {
+        if (knownCategories.size() != incomingCategories.size()) {
             Set<String> knownCategoryNames = knownCategories.stream()
                     .map(Category::getName)
                     .collect(Collectors.toSet());
@@ -282,12 +293,14 @@ public class BlogServiceImpl implements BlogService {
             incomingCategories.removeAll(knownCategoryNames);
 
             String unknownCategoriesNotAllowedMsg =
-                    messageResolver.getMessage("blog.categories.unknown-exist", incomingCategories);
+                    messageResolver.getMessage("blog.categories.not-found", incomingCategories);
+            LOG.warn(unknownCategoriesNotAllowedMsg);
             throw new IllegalArgumentException(unknownCategoriesNotAllowedMsg);
         }
         b.setCategories(new HashSet<>(knownCategories));
     }
 
+    @Transactional
     private Set<Tag> handleTags(Blog b, Set<String> incomingTags) {
         Set<String> currentTags = (b.getTags() != null && !b.getTags().isEmpty())
                 ? b.getTags().stream().map(Tag::getName).collect(Collectors.toSet())
@@ -312,26 +325,26 @@ public class BlogServiceImpl implements BlogService {
         return newTagsToAdd;
     }
 
-    private String generateSlug(String title, UUID authorId) {
+    private String generateSlug(String title) {
         String titleSlug = title
-                            .trim()
-                            .toLowerCase()
-                            .replaceAll("[^a-z0-9\\s-]", "")
-                            .replaceAll("\\s+", "-")
-                            .replaceAll("-+", "-")
-                            .replaceAll("^-|-$", "");
+                .trim()
+                .toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("\\s+", "-")
+                .replaceAll("-+", "-")
+                .replaceAll("^-|-$", "");
 
         List<String> similarSlugs = blogRepository.findSimilarSlugs(titleSlug);
 
-        if(similarSlugs.isEmpty()) return titleSlug;
+        if (similarSlugs.isEmpty()) return titleSlug;
 
         int latestNo = 0;
-        for(String similarSlug : similarSlugs) {
-            if(similarSlug.equals(titleSlug)) continue;
+        for (String similarSlug : similarSlugs) {
+            if (similarSlug.equals(titleSlug)) continue;
 
-            int slugNo = Integer.parseInt(similarSlug.substring(titleSlug.length()+1));
+            int slugNo = Integer.parseInt(similarSlug.substring(titleSlug.length() + 1));
             latestNo = Math.max(latestNo, slugNo);
         }
-        return titleSlug+"-"+(latestNo+1);
+        return titleSlug + "-" + (latestNo + 1);
     }
 }

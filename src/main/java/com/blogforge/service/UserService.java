@@ -6,7 +6,6 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.user.UserSpecificationParams;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
@@ -17,9 +16,9 @@ public interface UserService {
 
     UserProfileResponse create(CreateUserRequest dto);
 
-    UserProfileResponse partialUpdate(UpdateUserRequest dto);
+    UserProfileResponse partialUpdate(UpdateUserRequest dto, String authenticatedUsername);
 
-    GenericResponse changePassword(ChangePasswordRequest dto);
+    GenericResponse changePassword(ChangePasswordRequest dto, String authenticatedUsername);
 
     void assignAuthorRole(UUID userId);
 }

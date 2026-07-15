@@ -2,10 +2,10 @@ package com.blogforge.controller;
 
 import com.blogforge.dto.AuthorProfileResponse;
 import com.blogforge.dto.GenericResponse;
-import com.blogforge.dto.user.UserProfileResponse;
 import com.blogforge.dto.user.UserSummaryResponse;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
+import com.blogforge.security.CustomUserDetails;
 import com.blogforge.service.AuthorService;
 import com.blogforge.service.FollowService;
 import com.blogforge.specification.user.UserSpecificationParams;
@@ -59,14 +59,18 @@ public class AuthorController {
     }
 
     @PostMapping(path = "/api/v1/authors/{username}/follow")
-    public ResponseEntity<GenericResponse> followAuthor(@PathVariable String username) {
-        GenericResponse gr = followService.create(username);
+    public ResponseEntity<GenericResponse> followAuthor(
+            @PathVariable String username,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        GenericResponse gr = followService.create(username, principal.getUsername());
         return new ResponseEntity<>(gr, HttpStatus.CREATED);
     }
 
-    @DeleteMapping(path = "/api/v1/authors/{authorName}/follow")
-    public ResponseEntity<GenericResponse> unfollowAuthor(@PathVariable String authorName) {
-        GenericResponse gr = followService.delete(authorName);
+    @DeleteMapping(path = "/api/v1/authors/{username}/follow")
+    public ResponseEntity<GenericResponse> unfollowAuthor(
+            @PathVariable String username,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        GenericResponse gr = followService.delete(username, principal.getUsername());
         return new ResponseEntity<>(gr, HttpStatus.CREATED);
     }
 }
