@@ -77,4 +77,14 @@ public class AuthorServiceImpl implements AuthorService {
 
         return userMapper.fromEntityToAuthorProfileResponse(author, isFollowing);
     }
+
+    @Override
+    public AuthorProfileResponse getMyProfile(String username) {
+        User author = userRepository.findByUsernameAndRoles_Name(username, ROLE_AUTHOR)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageResolver.getMessage("entity.not-found", "Author", username)
+                ));
+
+        return userMapper.fromEntityToAuthorProfileResponse(author, false);
+    }
 }

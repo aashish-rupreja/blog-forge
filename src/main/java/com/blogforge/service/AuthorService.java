@@ -13,4 +13,6 @@ public interface AuthorService {
     PagedResponse<UserSummaryResponse> getAllAuthorSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams);
 
     AuthorProfileResponse getAuthorProfile(String username, String authenticatedPrincipalUsername);
+
+    AuthorProfileResponse getMyProfile(String username);
 }

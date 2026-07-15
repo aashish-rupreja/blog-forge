@@ -50,6 +50,14 @@ public class AuthorController {
         return new ResponseEntity<>(apr, HttpStatus.OK);
     }
 
+    @GetMapping(path = "/api/v1/authors/me")
+    public ResponseEntity<AuthorProfileResponse> getMyProfile(@AuthenticationPrincipal UserDetails principal) {
+        String currentUserUsername = (principal != null)
+                ? principal.getUsername() : null;
+        AuthorProfileResponse myProfile = authorService.getMyProfile(currentUserUsername);
+        return new ResponseEntity<>(myProfile, HttpStatus.OK);
+    }
+
     @PostMapping(path = "/api/v1/authors/{username}/follow")
     public ResponseEntity<GenericResponse> followAuthor(@PathVariable String username) {
         GenericResponse gr = followService.create(username);
