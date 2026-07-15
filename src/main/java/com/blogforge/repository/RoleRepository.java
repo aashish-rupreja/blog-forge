@@ -20,4 +20,6 @@ public interface RoleRepository extends JpaRepository<Role, UUID>, JpaSpecificat
         DELETE FROM Role r WHERE UPPER(r.name) IN :roleNames
     """)
     long deleteAllIn(Collection<String> roleNames);
+
+    boolean existsByNameIgnoreCase(String name);
 }
