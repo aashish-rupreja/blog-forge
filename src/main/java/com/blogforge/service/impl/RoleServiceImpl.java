@@ -93,7 +93,7 @@ public class RoleServiceImpl implements RoleService {
         role.setRoleType(RoleType.CUSTOM);
         Role saved = roleRepository.save(role);
 
-        LOG.info("Role \"{}\" created", normalized);
+        LOG.info("Role \"{}\" created", saved.getName());
         return roleMapper.fromEntityToResponse(saved);
     }
 
