@@ -1,5 +1,6 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.dto.comment.CreateCommentRequest;
 import com.blogforge.dto.comment.UpdateCommentRequest;
@@ -13,6 +14,7 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.BlogRepository;
 import com.blogforge.repository.CommentRepository;
+import com.blogforge.security.CustomUserDetails;
 import com.blogforge.service.CommentService;
 import com.blogforge.specification.comment.CommentSpecification;
 import com.blogforge.specification.comment.CommentSpecificationParams;
@@ -94,5 +96,38 @@ public class CommentServiceImpl implements CommentService {
         Comment saved = commentRepository.save(c);
         return commentMapper.fromEntityToResponse(saved);
 
+    }
+
+    @Override
+    public GenericResponse delete(UUID id, CustomUserDetails principal) {
+        Comment c = commentRepository.findById(id)
+                .orElseThrow(() -> {
+                    String commentNotFoundMsg = messageResolver.getMessage(
+                            "entity.not-found",
+                            "Comment", id
+                    );
+                    return new EntityNotFoundException(commentNotFoundMsg);
+                });
+
+
+        // allow delete comment under these conditions
+        // delete requested by comment owner
+        boolean isCommentOwner = c.getOwner().getUsername().equals(principal.getUsername());
+
+
+        // delete requested by blog author
+        boolean isBlogAuthor = c.getBlog().getAuthor().getUsername().equals(principal.getUsername());
+
+
+        // delete requested by admin
+        boolean isAdmin = principal.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if(!(isCommentOwner || isBlogAuthor || isAdmin)) {
+            throw new AccessDeniedException(messageResolver.getMessage("comment-delete.access-denied"));
+        }
+        commentRepository.delete(c);
+        return new GenericResponse(messageResolver.getMessage("comment.delete.msg"));
     }
 }

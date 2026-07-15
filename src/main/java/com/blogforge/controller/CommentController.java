@@ -1,5 +1,6 @@
 package com.blogforge.controller;
 
+import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.comment.CommentResponse;
 import com.blogforge.dto.comment.UpdateCommentRequest;
 import com.blogforge.pagination.PagedResponse;
@@ -40,6 +41,15 @@ public class CommentController {
             @PathVariable UUID id) {
         CommentResponse updated = commentService.partialUpdate(id, dto, principal.getUsername());
         return new ResponseEntity<>(updated, HttpStatus.OK);
+    }
+
+    @DeleteMapping(path = "/api/v1/comments/{id}")
+    public ResponseEntity<GenericResponse> deleteComment(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        GenericResponse deleteResponse = commentService.delete(id, principal);
+        return new ResponseEntity<>(deleteResponse, HttpStatus.OK);
     }
 
 }
