@@ -6,6 +6,7 @@ import com.blogforge.dto.blog.BlogSummaryResponse;
 import com.blogforge.dto.blog.CreateBlogRequest;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
+import com.blogforge.dto.comment.CreateCommentRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.blog.BlogSpecificationParams;
@@ -30,4 +31,5 @@ public interface BlogService {
     BlogDetailsResponse create(CreateBlogRequest dto);
 
     GenericResponse hardDelete(List<UUID> uuids);
+
 }

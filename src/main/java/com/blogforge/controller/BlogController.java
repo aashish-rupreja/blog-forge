@@ -6,13 +6,19 @@ import com.blogforge.dto.blog.BlogSummaryResponse;
 import com.blogforge.dto.blog.CreateBlogRequest;
 import com.blogforge.dto.blog.UpdateBlogRequest;
 import com.blogforge.dto.comment.CommentResponse;
+import com.blogforge.dto.comment.CreateCommentRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
+import com.blogforge.security.CustomUserDetails;
 import com.blogforge.service.BlogService;
+import com.blogforge.service.CommentService;
 import com.blogforge.specification.blog.BlogSpecificationParams;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,9 +28,11 @@ import java.util.UUID;
 public class BlogController {
 
     private final BlogService blogService;
+    private final CommentService commentService;
 
-    public BlogController(BlogService blogService) {
+    public BlogController(BlogService blogService, CommentService commentService) {
         this.blogService = blogService;
+        this.commentService = commentService;
     }
 
     @GetMapping(path = "/api/v1/blogs")
@@ -76,6 +84,16 @@ public class BlogController {
     public ResponseEntity<BlogDetailsResponse> create(@Valid @RequestBody CreateBlogRequest dto) {
         BlogDetailsResponse blogResponse = blogService.create(dto);
         return new ResponseEntity<>(blogResponse, HttpStatus.CREATED);
+    }
+
+    @PostMapping(path = "/api/v1/blogs/{slug}/comments")
+    public ResponseEntity<CommentResponse> addComment(
+            @PathVariable String slug,
+            @Valid @RequestBody CreateCommentRequest dto,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        CommentResponse comment = commentService.addComment(slug, dto, principal.getUser());
+        return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }
 
     @DeleteMapping(path = "/api/v1/blogs/hard-delete")

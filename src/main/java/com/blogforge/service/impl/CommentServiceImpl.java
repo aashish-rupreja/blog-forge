@@ -1,15 +1,21 @@
 package com.blogforge.service.impl;
 
 import com.blogforge.dto.comment.CommentResponse;
+import com.blogforge.dto.comment.CreateCommentRequest;
+import com.blogforge.entity.Blog;
 import com.blogforge.entity.Comment;
+import com.blogforge.entity.User;
+import com.blogforge.exception.MessageResolver;
 import com.blogforge.mapper.CommentMapper;
 import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
+import com.blogforge.repository.BlogRepository;
 import com.blogforge.repository.CommentRepository;
 import com.blogforge.service.CommentService;
 import com.blogforge.specification.comment.CommentSpecification;
 import com.blogforge.specification.comment.CommentSpecificationParams;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,11 +25,15 @@ import org.springframework.stereotype.Service;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
+    private final BlogRepository blogRepository;
     private final CommentMapper commentMapper;
+    private final MessageResolver messageResolver;
 
-    public CommentServiceImpl(CommentRepository commentRepository, CommentMapper commentMapper) {
+    public CommentServiceImpl(CommentRepository commentRepository, BlogRepository blogRepository, CommentMapper commentMapper, MessageResolver messageResolver) {
         this.commentRepository = commentRepository;
+        this.blogRepository = blogRepository;
         this.commentMapper = commentMapper;
+        this.messageResolver = messageResolver;
     }
 
     @Override
@@ -42,5 +52,23 @@ public class CommentServiceImpl implements CommentService {
                 comments.isEmpty(),
                 comments.hasNext()
         );
+    }
+
+    @Override
+    public CommentResponse addComment(String slug, CreateCommentRequest dto, User commentor) {
+        Comment c = commentMapper.fromCreateRequestToEntity(dto);
+        c.setOwner(commentor);
+
+        Blog b = blogRepository.findBySlugIgnoreCase(slug)
+                .orElseThrow(() -> {
+                    String blogNotFoundMsg = messageResolver.getMessage(
+                            "entity.not-found",
+                            "Blog", slug);
+                    return new EntityNotFoundException(blogNotFoundMsg);
+                });
+        c.setBlog(b);
+        Comment saved = commentRepository.save(c);
+
+        return commentMapper.fromEntityToResponse(saved);
     }
 }
