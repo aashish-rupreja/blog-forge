@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -52,6 +53,7 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PagedResponse<AuthorApplicationResponse> getAll(PaginationRequestParams reqParams, AuthorApplicationSpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -70,6 +72,7 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<AuthorApplicationResponse> getMyAuthorApplications(
             PaginationRequestParams reqParams,
             MyAuthorApplicationsRequest specParams,
@@ -95,6 +98,7 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public AuthorApplicationResponse create(CreateAuthorApplicationRequest dto, String currentAuthenticatedUsername) {
 
         Optional<AuthorApplication> check =
@@ -116,6 +120,7 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public AuthorApplicationResponse getSingleApplication(UUID id) {
         AuthorApplication aa = authorApplicationRepository.findById(id)
                 .orElseThrow(() -> {
@@ -131,6 +136,7 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public AuthorApplicationResponse approveApplication(UUID id, UpdateAuthorApplicationRequest dto) {
         AuthorApplication aa = authorApplicationRepository.findById(id)
                 .orElseThrow(() -> {
@@ -157,6 +163,7 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public AuthorApplicationResponse rejectApplication(UUID id, UpdateAuthorApplicationRequest dto) {
         AuthorApplication aa = authorApplicationRepository.findById(id)
                 .orElseThrow(() -> {

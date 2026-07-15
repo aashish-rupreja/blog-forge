@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,6 +38,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<TagResponse> getAll(PaginationRequestParams reqParams, String tagName) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -60,6 +62,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public TagResponse getByName(String tagName) {
         Tag t = tagRepository.findByNameIgnoreCase(tagName)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -70,6 +73,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_AUTHOR')")
     public TagResponse create(CreateTagRequest tagRequest) {
         LOG.info("Attempting to create Tag \"{}\"", tagRequest.name());
 
@@ -87,6 +91,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse delete(DeleteTagRequest tagRequest) {
         LOG.info("Attempting to delete Tag \"{}\"", tagRequest.name());
 

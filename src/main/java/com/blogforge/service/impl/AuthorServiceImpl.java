@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,6 +45,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<UserSummaryResponse> getAllAuthorSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -64,6 +66,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public AuthorProfileResponse getAuthorProfile(String username, String authenticatedPrincipalUsername) {
         User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
                 .orElseThrow(() -> {
@@ -84,6 +87,7 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_AUTHOR')")
     public AuthorProfileResponse getMyProfile(String username) {
         User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
                 .orElseThrow(() -> {

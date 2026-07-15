@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -48,6 +49,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PagedResponse<CommentResponse> getAll(PaginationRequestParams reqParams, CommentSpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -67,6 +69,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public CommentResponse addComment(String slug, CreateCommentRequest dto, User commentor) {
         Comment c = commentMapper.fromCreateRequestToEntity(dto);
         c.setOwner(commentor);
@@ -86,6 +89,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public CommentResponse partialUpdate(UUID commentId, UpdateCommentRequest dto, String commentOwnerUsername) {
         Comment c = commentRepository.findById(commentId)
                 .orElseThrow(() -> {
@@ -109,6 +113,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_AUTHOR', 'ROLE_ADMIN')")
     public GenericResponse delete(UUID id, CustomUserDetails principal) {
         Comment c = commentRepository.findById(id)
                 .orElseThrow(() -> {
