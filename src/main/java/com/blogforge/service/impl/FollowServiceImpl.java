@@ -1,8 +1,8 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.constants.Constants;
 import com.blogforge.dto.GenericResponse;
 import com.blogforge.entity.Follow;
-import com.blogforge.entity.Role;
 import com.blogforge.entity.User;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.repository.FollowRepository;
@@ -10,18 +10,16 @@ import com.blogforge.repository.UserRepository;
 import com.blogforge.service.FollowService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class FollowServiceImpl implements FollowService {
 
-    private final String AUTHOR_ROLE_NAME = "ROLE_AUTHOR";
+    private static final Logger LOG = LoggerFactory.getLogger(FollowServiceImpl.class);
 
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
@@ -37,81 +35,74 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public GenericResponse create(String username) {
-        // check if author even exists
-        Optional<User> checkAuthor = userRepository.findByUsernameIgnoreCase(username);
-        if(checkAuthor.isEmpty()) {
-            String authorNotExists = messageResolver.getMessage(
-                "entity.not-found",
-                    "Author", username
-            );
-            throw new EntityNotFoundException(authorNotExists);
-        }
-
-        // check if this user is REALLY an author
-        User author = checkAuthor.get();
-        Optional<Role> checkRole = author.getRoles()
-                .stream()
-                .filter(r -> r.getName().equals(AUTHOR_ROLE_NAME))
-                .findFirst();
-        if(checkRole.isEmpty()) {
-            String nonAuthorFollow = messageResolver.getMessage("follow.non-author.not-allowed");
-            throw new IllegalStateException(nonAuthorFollow);
-        }
-
+    @Transactional
+    public GenericResponse create(String username, String authenticatedUsername) {
         // check if user is attempting self follow
-        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        if(currentAuthenticatedUsername.equals(username)) {
+        if (authenticatedUsername.equals(username)) {
             String selfFollowNotAllowed = messageResolver.getMessage("follow.self.not-allowed");
+            LOG.warn(selfFollowNotAllowed);
             throw new IllegalStateException(selfFollowNotAllowed);
         }
 
-        // at this point the current user will always exist hence .get() directly
-        User currentUser = userRepository.findByUsernameIgnoreCase(currentAuthenticatedUsername).get();
+        // check if author even exists
+        User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
+                .orElseThrow(() -> {
+                    String authorNotExists = messageResolver.getMessage(
+                            "entity.not-found",
+                            "Author", username
+                    );
+                    LOG.warn(authorNotExists);
+                    return new EntityNotFoundException(authorNotExists);
+                });
 
         // check if current user is already following the author
         boolean alreadyFollowing = followRepository.existsByFollower_UsernameAndFollowing_Username(
-                currentAuthenticatedUsername,
-                username
-        );
-        if(alreadyFollowing) {
+                authenticatedUsername, username);
+        if (alreadyFollowing) {
             String alreadyFollowingAuthor = messageResolver.getMessage(
                     "follow.already-following",
-                    username
-            );
+                    username);
+            LOG.warn(alreadyFollowingAuthor);
             throw new IllegalStateException(alreadyFollowingAuthor);
         }
+
+        User authenticatedUser = userRepository.findByUsernameIgnoreCase(authenticatedUsername)
+                .orElseThrow(() -> {
+                    String userNotExists = messageResolver.getMessage(
+                            "entity.not-found",
+                            "User", username
+                    );
+                    LOG.warn(userNotExists);
+                    return new EntityNotFoundException(userNotExists);
+                });
 
         // finally create the follow
         Follow f = new Follow();
         f.setFollowing(author);
-        f.setFollower(currentUser);
+        f.setFollower(authenticatedUser);
         f.setFollowedAt(Instant.now());
         followRepository.save(f);
 
-        String followSuccessful = messageResolver.getMessage("follow.successful", username);
+        String followSuccessful = messageResolver.getMessage("follow.created", username);
         return new GenericResponse(followSuccessful);
     }
 
     @Override
     @Transactional
-    public GenericResponse delete(String username) {
-        String currentAuthenticatedUsername = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-        if(currentAuthenticatedUsername.equals(username)) {
+    public GenericResponse delete(String username, String authenticatedUsername) {
+
+        if (authenticatedUsername.equals(username)) {
             String selfUnfollow = messageResolver.getMessage("unfollow.self.not-allowed");
+            LOG.warn(selfUnfollow);
             throw new IllegalStateException(selfUnfollow);
         }
 
-        int d = followRepository.deleteByFollower_UsernameAndFollowing_Username(currentAuthenticatedUsername, username);
-        String msg = (d > 0)
-                ? messageResolver.getMessage("unfollow.successful", username)
-                : messageResolver.getMessage("unfollow.unnecessary", username);
+        int d = followRepository.deleteByFollower_UsernameAndFollowing_Username(authenticatedUsername, username);
+        String unfollowMsg = (d > 0)
+                ? messageResolver.getMessage("follow.removed", username)
+                : messageResolver.getMessage("unfollow.not-following", username);
 
-        return new GenericResponse(msg);
+        LOG.info(unfollowMsg);
+        return new GenericResponse(unfollowMsg);
     }
 }
