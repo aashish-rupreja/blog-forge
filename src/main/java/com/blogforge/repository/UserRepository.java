@@ -3,7 +3,6 @@ package com.blogforge.repository;
 import com.blogforge.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -14,10 +13,14 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     Optional<User> findByUsernameIgnoreCase(String username);
 
+    boolean existsByUsernameIgnoreCase(String username);
+    boolean existsByEmailIgnoreCase(String email);
+
     Optional<User> findByEmailIgnoreCase(String email);
 
     Optional<User> findByUsernameAndRoles_Name(String username, String roleName);
 
     Page<User> findAllByRoles_Name(String roleName, Pageable pageable);
     Page<User> findAllByUsernameContainingIgnoreCaseAndRoles_Name(String username, String roleName, Pageable pageable);
+
 }
