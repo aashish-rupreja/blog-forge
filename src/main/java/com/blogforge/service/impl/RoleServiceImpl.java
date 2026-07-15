@@ -5,6 +5,7 @@ import com.blogforge.dto.role.CreateRoleRequest;
 import com.blogforge.dto.role.DeleteRoleRequest;
 import com.blogforge.dto.role.RoleResponse;
 import com.blogforge.entity.Role;
+import com.blogforge.entity.RoleType;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.mapper.RoleMapper;
 import com.blogforge.pagination.PagedRequest;
@@ -14,6 +15,7 @@ import com.blogforge.repository.RoleRepository;
 import com.blogforge.service.RoleService;
 import com.blogforge.specification.role.RoleSpecification;
 import com.blogforge.specification.role.RoleSpecificationParams;
+import com.blogforge.constants.Constants;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -25,13 +27,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
 public class RoleServiceImpl implements RoleService {
 
-    private final Logger LOG = LoggerFactory.getLogger(RoleServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RoleServiceImpl.class);
 
     private final RoleRepository roleRepository;
     private final RoleMapper roleMapper;
@@ -44,11 +45,15 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public PagedResponse<RoleResponse> getAll(PaginationRequestParams reqParams, RoleSpecificationParams specParams) {
-        PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
-        Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
-        Specification<Role> roleSpecs = RoleSpecification.handleSpecs(specParams);
-        Page<Role> roles = roleRepository.findAll(roleSpecs, jpaPageable);
+    public PagedResponse<RoleResponse> getAll(PaginationRequestParams paginationRequestParams,
+                                              RoleSpecificationParams roleSpecificationParams) {
+
+        PagedRequest defaultsIfAnyInvalid = PagedRequest.initWithDefaultsIfAnyInvalid(paginationRequestParams);
+        Pageable pageable = PagedRequest.getJPAPageRequest(defaultsIfAnyInvalid);
+        Specification<Role> roleSpecifications = RoleSpecification.handleSpecs(roleSpecificationParams);
+        Page<Role> roles = roleRepository.findAll(roleSpecifications, pageable);
+
+        LOG.debug("Fetching all roles");
         return new PagedResponse<>(
                 roles.stream().map(roleMapper::fromEntityToResponse).toList(),
                 roles.getNumber() + 1,
@@ -62,75 +67,97 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleResponse getByName(String name) {
-        LOG.debug("Attempting to find Role \"{}\"", name);
-        Optional<Role> r = roleRepository.findByNameIgnoreCase(name);
-        if (r.isEmpty()) {
-            String notFoundMessage = messageResolver.getMessage("entity.not-found", "Role", name);
-            LOG.debug(notFoundMessage);
-            throw new EntityNotFoundException(notFoundMessage);
-        }
-        LOG.debug("Role \"{}\" found", name);
-        return roleMapper.fromEntityToResponse(r.get());
+        Role role = findRoleOrThrow(name);
+        return roleMapper.fromEntityToResponse(role);
     }
 
+    // TODO: Add authorization so only admin can create role
     @Override
+    @Transactional
     public RoleResponse create(CreateRoleRequest dto) {
-        LOG.debug("Attempting to create Role \"{}\"", dto.name());
+        LOG.info("Attempting to create Role \"{}\"", dto.name());
 
-        String roleName = normalizeRoleName(dto.name());
-        CreateRoleRequest normalized = new CreateRoleRequest(roleName, dto.roleType());
+        // normalized form makes the role name uppercase and adds prefix ROLE_
+        // e.g. author -> ROLE_AUTHOR
+        String normalizeRoleName = normalizeRoleName(dto.name());
 
-        Optional<Role> r = roleRepository.findByNameIgnoreCase(normalized.name());
-        if (r.isPresent()) {
-            String alreadyExistsMessage = messageResolver.getMessage("entity.already-exists", "Role", roleName);
-            LOG.debug(alreadyExistsMessage);
-            throw new EntityExistsException(alreadyExistsMessage);
+        boolean roleExists = roleRepository.existsByNameIgnoreCase(normalizeRoleName);
+        if (roleExists) {
+            String roleDoesExist = messageResolver.getMessage("entity.already-exists", "Role", normalizeRoleName);
+            LOG.warn(roleDoesExist);
+            throw new EntityExistsException(roleDoesExist);
         }
 
-        Role saved = roleRepository.save(roleMapper.fromCreateRequestToEntity(normalized));
-        LOG.debug("Role \"{}\" created", roleName);
+        CreateRoleRequest normalized = new CreateRoleRequest(normalizeRoleName, dto.roleType());
+        Role role = roleMapper.fromCreateRequestToEntity(normalized);
+        role.setRoleType(RoleType.CUSTOM);
+        Role saved = roleRepository.save(role);
+
+        LOG.info("Role \"{}\" created", saved.getName());
         return roleMapper.fromEntityToResponse(saved);
     }
 
     @Override
-    public GenericResponse deleteOne(String roleName) {
-        LOG.debug("Attempting to delete Role \"{}\"", roleName);
-        Optional<Role> r = roleRepository.findByNameIgnoreCase(roleName);
-        if (r.isEmpty()) {
-            String notExistsMessage = messageResolver.getMessage("entity.not-found", "Role", roleName);
-            LOG.debug(notExistsMessage);
-            throw new EntityNotFoundException(notExistsMessage);
+    @Transactional
+    public GenericResponse deleteOne(String name) {
+        LOG.info("Attempting to delete Role \"{}\"", name);
+
+        Role role = findRoleOrThrow(name);
+        if(role.getRoleType() == RoleType.SYSTEM) {
+            String deleteNotAllowedMsg = messageResolver.getMessage("role.system.delete.not-allowed", name);
+            throw new IllegalArgumentException(deleteNotAllowedMsg);
         }
-        roleRepository.delete(r.get());
-        String deleted = "Role \"##\" deleted".replaceAll("##", roleName);
-        LOG.debug(deleted);
-        return new GenericResponse(deleted);
+        roleRepository.delete(role);
+
+        String deleteMsg = messageResolver.getMessage("entity.delete.success", "1", "Role");
+        LOG.info(deleteMsg);
+        return new GenericResponse(deleteMsg);
     }
 
     @Override
     @Transactional
-    public GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleReq) {
+    public GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleRequest) {
         Set<String> normalized = new HashSet<>();
-        for(String name : deleteRoleReq.roles()) {
+        for (String name : deleteRoleRequest.roles()) {
+            boolean isSystemRole = name.equals(Constants.ADMIN_ROLE_NAME)
+                    || name.equals(Constants.AUTHOR_ROLE_NAME)
+                    || name.equals(Constants.USER_ROLE_NAME);
+
+            if (isSystemRole) {
+                String deleteNotAllowedMsg = messageResolver.getMessage("role.system.delete.not-allowed", name);
+                throw new IllegalArgumentException(deleteNotAllowedMsg);
+            }
             normalized.add(normalizeRoleName(name));
         }
-        LOG.debug("Attempting to delete Roles {}", normalized.toString());
 
         if (normalized.isEmpty()) {
-            String msg = "No roles provided to delete";
-            LOG.debug(msg);
-            return new GenericResponse(msg);
+            String entityToDeleteNotProvided = messageResolver.getMessage("entity.to-delete.not-provided", "Role(s)");
+            LOG.debug(entityToDeleteNotProvided);
+            throw new IllegalArgumentException(entityToDeleteNotProvided);
         }
 
+        LOG.debug("Attempting to delete Roles {}", normalized.toString());
         long deletedCount = roleRepository.deleteAllIn(normalized);
-        String msg =  String.valueOf(deletedCount)+" roles deleted";
-        LOG.debug(msg);
-        return new GenericResponse(msg);
+
+        String deleteMsg = messageResolver.getMessage("entity.delete.success", String.valueOf(deletedCount), "Roles");
+        LOG.info(deleteMsg);
+        return new GenericResponse(deleteMsg);
+    }
+
+    private Role findRoleOrThrow(String name) {
+        LOG.debug("Attempting to find Role \"{}\"", name);
+        Role role = roleRepository.findByNameIgnoreCase(name)
+                .orElseThrow(() -> {
+                    String notFoundMessage = messageResolver.getMessage("entity.not-found", "Role", name);
+                    LOG.debug(notFoundMessage);
+                    return new EntityNotFoundException(notFoundMessage);
+                });
+        return role;
     }
 
     private String normalizeRoleName(String name) {
         name = name.toUpperCase();
-        if(!name.startsWith("ROLE")) name = "ROLE_"+name;
+        name = (!name.startsWith("ROLE_")) ? name : "ROLE_" + name;
         return name;
     }
 }

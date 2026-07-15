@@ -8,17 +8,16 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.specification.role.RoleSpecificationParams;
 
-import java.util.Set;
-
 public interface RoleService {
 
-    PagedResponse<RoleResponse> getAll(PaginationRequestParams reqParams, RoleSpecificationParams specParams);
+    PagedResponse<RoleResponse> getAll(PaginationRequestParams paginationRequestParams,
+                                       RoleSpecificationParams roleSpecificationParams);
 
     RoleResponse getByName(String name);
 
-    RoleResponse create(CreateRoleRequest dto);
+    RoleResponse create(CreateRoleRequest createRoleRequest);
 
-    GenericResponse deleteOne(String roleName);
+    GenericResponse deleteOne(String name);
 
-    GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleReq);
+    GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleRequest);
 }
