@@ -29,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -71,6 +72,7 @@ public class BlogServiceImpl implements BlogService {
         this.messageResolver = messageResolver;
     }
 
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<BlogSummaryResponse> getAllSummary(PaginationRequestParams requestParams, BlogSpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(requestParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -89,6 +91,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public BlogDetailsResponse getBlogDetails(String slug) {
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
@@ -100,6 +103,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<CommentResponse> getBlogComments(String slug, PaginationRequestParams requestParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(requestParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -118,6 +122,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_AUTHOR')")
     public BlogDetailsResponse partialUpdate(
             String slug,
             UpdateBlogRequest updateBlogRequest,
@@ -172,6 +177,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_AUTHOR', 'ROLE_ADMIN')")
     public GenericResponse delete(String slug) {
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
@@ -191,6 +197,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_AUTHOR')")
     public PagedResponse<BlogSummaryResponse> getMyBlogs(
             PaginationRequestParams reqParams,
             String currentAuthenticatedUsername) {
@@ -212,6 +219,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_AUTHOR')")
     public BlogDetailsResponse create(CreateBlogRequest dto, String currentAuthenticatedUsername) {
         LOG.info("User {} attempting to create a new blog", currentAuthenticatedUsername);
         Blog b = blogMapper.fromCreateRequestToEntity(dto);
@@ -244,6 +252,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse hardDelete(List<UUID> uuids) {
         blogRepository.deleteAllById(uuids);
         return new GenericResponse("Blogs Deleted!");
@@ -251,6 +260,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public GenericResponse like(String slug, AddReactionRequest dto, CustomUserDetails principal) {
         Blog blog = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> {

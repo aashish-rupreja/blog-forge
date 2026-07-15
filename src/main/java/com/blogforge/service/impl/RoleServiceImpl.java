@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -45,6 +46,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PagedResponse<RoleResponse> getAll(PaginationRequestParams paginationRequestParams,
                                               RoleSpecificationParams roleSpecificationParams) {
 
@@ -66,14 +68,16 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public RoleResponse getByName(String name) {
         Role role = findRoleOrThrow(name);
         return roleMapper.fromEntityToResponse(role);
     }
 
-    // TODO: Add authorization so only admin can create role
+
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public RoleResponse create(CreateRoleRequest dto) {
         LOG.info("Attempting to create Role \"{}\"", dto.name());
 
@@ -99,6 +103,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse deleteOne(String name) {
         LOG.info("Attempting to delete Role \"{}\"", name);
 
@@ -116,6 +121,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleRequest) {
         Set<String> normalized = new HashSet<>();
         for (String name : deleteRoleRequest.roles()) {

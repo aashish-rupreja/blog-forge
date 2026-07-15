@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -36,6 +37,7 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public GenericResponse create(String username, String authenticatedUsername) {
         // check if user is attempting self follow
         if (authenticatedUsername.equals(username)) {
@@ -89,6 +91,7 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public GenericResponse delete(String username, String authenticatedUsername) {
 
         if (authenticatedUsername.equals(username)) {
