@@ -4,6 +4,7 @@ import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.user.*;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
+import com.blogforge.security.CustomUserDetails;
 import com.blogforge.service.UserService;
 import com.blogforge.specification.user.UserSpecificationParams;
 import jakarta.validation.Valid;
@@ -44,14 +45,18 @@ public class UserController {
     }
 
     @PatchMapping(path = "/api/v1/users/me/profile")
-    public ResponseEntity<UserProfileResponse> partialUpdate(@Valid @RequestBody UpdateUserRequest dto) {
-        UserProfileResponse upr = userService.partialUpdate(dto);
+    public ResponseEntity<UserProfileResponse> partialUpdate(
+            @Valid @RequestBody UpdateUserRequest dto,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        UserProfileResponse upr = userService.partialUpdate(dto, principal.getUsername());
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 
     @PatchMapping(path = "/api/v1/users/me/password")
-    public ResponseEntity<GenericResponse> changePassword(@Valid @RequestBody ChangePasswordRequest dto) {
-        GenericResponse gr = userService.changePassword(dto);
+    public ResponseEntity<GenericResponse> changePassword(
+            @Valid @RequestBody ChangePasswordRequest dto,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        GenericResponse gr = userService.changePassword(dto, principal.getUsername());
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
