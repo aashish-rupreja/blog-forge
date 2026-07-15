@@ -1,16 +1,13 @@
 package com.blogforge.mapper;
 
-import com.blogforge.Util;
+import com.blogforge.dto.AuthorProfileResponse;
 import com.blogforge.dto.BaseResponse;
 import com.blogforge.dto.user.*;
-import com.blogforge.entity.Blog;
 import com.blogforge.entity.Role;
 import com.blogforge.entity.User;
 import com.blogforge.entity.UserStatus;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,7 +45,7 @@ public class UserMapper {
         );
     }
 
-    public UserProfileResponse fromEntityToProfileResponse(User u) {
+    public UserProfileResponse fromEntityToUserProfileResponse(User u) {
         return new UserProfileResponse(
                 new BaseResponse(
                         u.getUuid(),
@@ -59,6 +56,23 @@ public class UserMapper {
                 u.getUsername(),
                 u.getProfilePicLink(),
                 u.getBio()
+        );
+    }
+
+    public AuthorProfileResponse fromEntityToAuthorProfileResponse(User u, boolean amIFollowingThisAuthor) {
+        int blogCount = (u.getBlogs() != null) ? u.getBlogs().size() : 0;
+        return new AuthorProfileResponse(
+                new BaseResponse(
+                        u.getUuid(),
+                        u.getCreatedAt(),
+                        u.getUpdatedAt()),
+                u.getFirstName(),
+                u.getLastName(),
+                u.getUsername(),
+                u.getProfilePicLink(),
+                u.getBio(),
+                blogCount,
+                amIFollowingThisAuthor
         );
     }
 }
