@@ -1,4 +1,4 @@
-package com.blogforge.dto;
+package com.blogforge.dto.jwt;
 
 import jakarta.validation.constraints.NotBlank;
 
