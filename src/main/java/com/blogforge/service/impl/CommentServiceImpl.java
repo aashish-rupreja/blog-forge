@@ -157,6 +157,6 @@ public class CommentServiceImpl implements CommentService {
         }
         commentRepository.delete(c);
         LOG.info("Comment identified by {} is deleted", c.getUuid());
-        return new GenericResponse(messageResolver.getMessage("comment.delete.msg"));
+        return new GenericResponse(messageResolver.getMessage("comment.deleted"));
     }
 }
