@@ -72,7 +72,7 @@ public class BlogServiceImpl implements BlogService {
         this.messageResolver = messageResolver;
     }
 
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("permitAll()")
     public PagedResponse<BlogSummaryResponse> getAllSummary(PaginationRequestParams requestParams, BlogSpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(requestParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -91,7 +91,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("permitAll()")
     public BlogDetailsResponse getBlogDetails(String slug) {
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
@@ -103,7 +103,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("permitAll()")
     public PagedResponse<CommentResponse> getBlogComments(String slug, PaginationRequestParams requestParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(requestParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);

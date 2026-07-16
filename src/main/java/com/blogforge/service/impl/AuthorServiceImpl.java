@@ -45,7 +45,6 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<UserSummaryResponse> getAllAuthorSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -66,7 +65,6 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public AuthorProfileResponse getAuthorProfile(String username, String authenticatedPrincipalUsername) {
         User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
                 .orElseThrow(() -> {

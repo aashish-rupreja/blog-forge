@@ -82,7 +82,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public UserProfileResponse create(CreateUserRequest dto) {
         LOG.info("Attempting to register user \"{}\"", dto.username());
 
