@@ -50,7 +50,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User profile returned successfully"),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
-    @GetMapping(path = "/api/v1/users/{username:.+}")
+    @GetMapping(path = "/api/v1/users/{username:[a-zA-Z0-9_\\.]+}")
     public ResponseEntity<UserProfileResponse> getUserProfile(
             @Parameter(description = "The username of the user") @PathVariable String username) {
         UserProfileResponse upr = userService.getUserProfile(username);

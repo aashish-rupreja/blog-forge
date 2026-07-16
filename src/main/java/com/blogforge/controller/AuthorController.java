@@ -54,7 +54,7 @@ public class AuthorController {
             @ApiResponse(responseCode = "200", description = "Author profile returned successfully"),
             @ApiResponse(responseCode = "404", description = "Author not found", content = @Content)
     })
-    @GetMapping(path = "/api/v1/authors/{username:.+}")
+    @GetMapping(path = "/api/v1/authors/{username:[a-zA-Z0-9_\\.]+}")
     public ResponseEntity<AuthorProfileResponse> getAuthorProfile(
             @Parameter(description = "The username of the author") @PathVariable String username,
             @AuthenticationPrincipal UserDetails principal) {
@@ -91,7 +91,7 @@ public class AuthorController {
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
             @ApiResponse(responseCode = "404", description = "Author not found", content = @Content)
     })
-    @PostMapping(path = "/api/v1/authors/{username:.+}/follow")
+    @PostMapping(path = "/api/v1/authors/{username:[a-zA-Z0-9_\\.]+}/follow")
     public ResponseEntity<GenericResponse> followAuthor(
             @Parameter(description = "The username of the author to follow") @PathVariable String username,
             @AuthenticationPrincipal CustomUserDetails principal) {
@@ -108,7 +108,7 @@ public class AuthorController {
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
             @ApiResponse(responseCode = "404", description = "Author not found", content = @Content)
     })
-    @DeleteMapping(path = "/api/v1/authors/{username:.+}/follow")
+    @DeleteMapping(path = "/api/v1/authors/{username:[a-zA-Z0-9_\\.]+}/follow")
     public ResponseEntity<GenericResponse> unfollowAuthor(
             @Parameter(description = "The username of the author to unfollow") @PathVariable String username,
             @AuthenticationPrincipal CustomUserDetails principal) {
