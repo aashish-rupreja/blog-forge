@@ -20,5 +20,7 @@ public interface UserService {
 
     GenericResponse changePassword(ChangePasswordRequest dto, String authenticatedUsername);
 
+    GenericResponse deleteProfile(String authenticatedUsername);
+
     void assignAuthorRole(UUID userId);
 }
