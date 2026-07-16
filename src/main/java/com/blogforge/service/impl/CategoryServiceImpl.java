@@ -45,7 +45,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<CategoryResponse> getAll(PaginationRequestParams reqParams, CategorySpecificationParams specParams) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -63,7 +62,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public CategoryResponse getByName(String categoryName) {
         Category c = categoryRepository.findByNameIgnoreCase(categoryName)
                 .orElseThrow(() -> new EntityNotFoundException(

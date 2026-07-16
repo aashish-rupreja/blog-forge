@@ -38,7 +38,6 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public PagedResponse<TagResponse> getAll(PaginationRequestParams reqParams, String tagName) {
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
@@ -62,7 +61,6 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public TagResponse getByName(String tagName) {
         Tag t = tagRepository.findByNameIgnoreCase(tagName)
                 .orElseThrow(() -> new EntityNotFoundException(
