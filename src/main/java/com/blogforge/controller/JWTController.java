@@ -1,6 +1,7 @@
 package com.blogforge.controller;
 
 import com.blogforge.dto.LoginRequest;
+import com.blogforge.security.JWTService;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class JWTController {
 
     private final AuthenticationManager authenticationManager;
+    private final JWTService jwtService;
 
-    public JWTController(AuthenticationManager authenticationManager) {
+    public JWTController(AuthenticationManager authenticationManager, JWTService jwtService) {
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @GetMapping("/api/v1/auth/login")
@@ -26,6 +29,6 @@ public class JWTController {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
-        // handover the authentication to JWT service to generate the token
+        return jwtService.genetateJwtToken(authentication);
     }
 }
