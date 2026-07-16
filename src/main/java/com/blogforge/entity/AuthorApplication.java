@@ -14,7 +14,7 @@ public class AuthorApplication extends AuditableEntity {
     private User applicant;
 
     @ManyToOne
-    @JoinColumn(name = "application_reviewer_id", nullable = false)
+    @JoinColumn(name = "application_reviewer_id")
     private User applicationReviewer;
 
     @Column(name = "application_reason", length = 500, nullable = false)
@@ -22,13 +22,13 @@ public class AuthorApplication extends AuditableEntity {
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private AuthorApplicationStatus status;
+    private AuthorApplicationStatus status = AuthorApplicationStatus.PENDING;
 
     @Column(name = "reviewer_remarks", length = 100)
-    private String reviewerRemarks;
+    private String reviewerRemarks = "Yet to be reviewed";
 
     @Column(name = "reviewed_at")
-    private Instant reviewedAt;
+    private Instant reviewedAt = Instant.EPOCH;
 
     public AuthorApplication() {}
 

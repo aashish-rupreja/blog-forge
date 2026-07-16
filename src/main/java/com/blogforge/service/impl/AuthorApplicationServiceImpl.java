@@ -1,11 +1,13 @@
 package com.blogforge.service.impl;
 
+import com.blogforge.constants.Constants;
 import com.blogforge.dto.authorapplication.AuthorApplicationResponse;
 import com.blogforge.dto.authorapplication.CreateAuthorApplicationRequest;
 import com.blogforge.dto.authorapplication.MyAuthorApplicationsRequest;
 import com.blogforge.dto.authorapplication.UpdateAuthorApplicationRequest;
 import com.blogforge.entity.AuthorApplication;
 import com.blogforge.entity.AuthorApplicationStatus;
+import com.blogforge.entity.User;
 import com.blogforge.exception.AuthorApplicationAlreadyExistsException;
 import com.blogforge.exception.AuthorApplicationTransitionException;
 import com.blogforge.exception.MessageResolver;
@@ -14,6 +16,7 @@ import com.blogforge.pagination.PagedRequest;
 import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.AuthorApplicationRepository;
+import com.blogforge.repository.UserRepository;
 import com.blogforge.service.AuthorApplicationService;
 import com.blogforge.service.UserService;
 import com.blogforge.specification.authorapplication.AuthorApplicationSpecification;
@@ -37,16 +40,19 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
     private static final Logger LOG = LoggerFactory.getLogger(AuthorApplicationServiceImpl.class);
 
     private final AuthorApplicationRepository authorApplicationRepository;
+    private final UserRepository userRepository;
     private final AuthorApplicationMapper authorApplicationMapper;
     private final UserService userService;
     private final MessageResolver messageResolver;
 
     public AuthorApplicationServiceImpl(
             AuthorApplicationRepository authorApplicationRepository,
+            UserRepository userRepository,
             UserService userService,
             AuthorApplicationMapper authorApplicationMapper,
             MessageResolver messageResolver) {
         this.authorApplicationRepository = authorApplicationRepository;
+        this.userRepository = userRepository;
         this.userService = userService;
         this.authorApplicationMapper = authorApplicationMapper;
         this.messageResolver = messageResolver;
@@ -114,6 +120,26 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
         }
 
         AuthorApplication newApplication = authorApplicationMapper.fromCreateRequestToEntity(dto);
+        User applicant = userRepository.findByUsernameIgnoreCase(currentAuthenticatedUsername)
+                .orElseThrow(() -> {
+                    String applicationNotFound = messageResolver.getMessage(
+                            "entity.not-found",
+                            "User", currentAuthenticatedUsername);
+                    LOG.warn(applicationNotFound);
+                    return new EntityNotFoundException(applicationNotFound);
+                });
+        newApplication.setApplicant(applicant);
+
+        User reviewer = userRepository.findByUsernameIgnoreCase(Constants.DEFAULT_ADMIN)
+                .orElseThrow(() -> {
+                    String applicationNotFound = messageResolver.getMessage(
+                            "entity.not-found",
+                            "User", Constants.DEFAULT_ADMIN);
+                    LOG.warn(applicationNotFound);
+                    return new EntityNotFoundException(applicationNotFound);
+                });
+        newApplication.setApplicationReviewer(reviewer);
+
         AuthorApplication saved = authorApplicationRepository.save(newApplication);
         LOG.info("New application created for {}", saved.getApplicant().getUsername());
         return authorApplicationMapper.fromEntityToResponse(saved);

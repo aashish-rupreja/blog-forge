@@ -167,6 +167,8 @@ public class BlogController {
             @Valid @RequestBody CreateCommentRequest dto,
             @AuthenticationPrincipal CustomUserDetails principal) {
 
+        System.out.println(dto);
+
         CommentResponse comment = commentService.addComment(slug, dto, principal.getUsername());
         return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }

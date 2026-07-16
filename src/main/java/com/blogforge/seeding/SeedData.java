@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 @Component
@@ -17,7 +18,7 @@ public class SeedData implements CommandLineRunner {
     @Value("${seedData}")
     private boolean seedData;
 
-    private final String PROFILE_PIC_LINK = "https://i.pravatar.cc/150";
+
     private final String DEFAULT_PASSWORD = "abc123";
 
     private final AuthorApplicationRepository authorApplicationRepository;
@@ -32,6 +33,12 @@ public class SeedData implements CommandLineRunner {
 
 
     private final PasswordEncoder passwordEncoder;
+
+    public String generateRandomProfileLink() {
+        Random random = new Random();
+        int randomNo = random.nextInt(1, 40);
+        return "https://i.pravatar.cc/150?img="+String.valueOf(randomNo);
+    }
 
     public SeedData(AuthorApplicationRepository authorApplicationRepository, BlogRepository blogRepository, CategoryRepository categoryRepository, CommentRepository commentRepository, FollowRepository followRepository, ReactionRepository reactionRepository, RoleRepository roleRepository, TagRepository tagRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.authorApplicationRepository = authorApplicationRepository;
@@ -71,7 +78,7 @@ public class SeedData implements CommandLineRunner {
             steve.setLastName("Rogers");
             steve.setUsername("steve.rogers");
             steve.setEmail("steve.rogers@avengers.com");
-            steve.setProfilePicLink(PROFILE_PIC_LINK);
+            steve.setProfilePicLink(generateRandomProfileLink());
             steve.setBio("I am the real Captain America!");
             steve.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             steve.setRoles(Set.of(authorRole));
@@ -82,7 +89,7 @@ public class SeedData implements CommandLineRunner {
             bruce.setLastName("Banner");
             bruce.setUsername("bruce.banner");
             bruce.setEmail("bruce.banner@avengers.com");
-            bruce.setProfilePicLink(PROFILE_PIC_LINK);
+            bruce.setProfilePicLink(generateRandomProfileLink());
             bruce.setBio("HULK OUT!");
             bruce.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             bruce.setRoles(Set.of(authorRole));
@@ -93,7 +100,7 @@ public class SeedData implements CommandLineRunner {
             maria.setLastName("Hill");
             maria.setUsername("m.hill");
             maria.setEmail("maria.hill@shield.com");
-            maria.setProfilePicLink(PROFILE_PIC_LINK);
+            maria.setProfilePicLink(generateRandomProfileLink());
             maria.setBio("Always obey Nick Fury!");
             maria.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             maria.setRoles(Set.of(userRole));
@@ -104,7 +111,7 @@ public class SeedData implements CommandLineRunner {
             pepper.setLastName("Potts");
             pepper.setUsername("potts.pepper");
             pepper.setEmail("pepper.potts@starkindustries.com");
-            pepper.setProfilePicLink(PROFILE_PIC_LINK);
+            pepper.setProfilePicLink(generateRandomProfileLink());
             pepper.setBio("CEO of Stark Industries");
             pepper.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             pepper.setRoles(Set.of(userRole));
@@ -115,10 +122,10 @@ public class SeedData implements CommandLineRunner {
             nick.setLastName("Fury");
             nick.setUsername("fury.nicholas.j");
             nick.setEmail("fury.nicholas.j@shield.com");
-            nick.setProfilePicLink(PROFILE_PIC_LINK);
+            nick.setProfilePicLink(generateRandomProfileLink());
             nick.setBio("I DON'T REMEMBER YOU ASKING A GODDAMN THING!");
             nick.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
-            nick.setRoles(Set.of(adminRole));
+            nick.setRoles(Set.of(adminRole, userRole, authorRole));
             nick.setStatus(UserStatus.ENABLED);
 
             User tony = new User();
@@ -126,7 +133,7 @@ public class SeedData implements CommandLineRunner {
             tony.setLastName("Stark");
             tony.setUsername("t.stark");
             tony.setEmail("ts@starkindustries.com");
-            tony.setProfilePicLink(PROFILE_PIC_LINK);
+            tony.setProfilePicLink(generateRandomProfileLink());
             tony.setBio("You know who I am");
             tony.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             tony.setRoles(Set.of(adminRole));
@@ -137,7 +144,7 @@ public class SeedData implements CommandLineRunner {
             natasha.setLastName("Romanoff");
             natasha.setUsername("natasha.romanoff");
             natasha.setEmail("natasha.romanoff@avengers.com");
-            natasha.setProfilePicLink(PROFILE_PIC_LINK);
+            natasha.setProfilePicLink(generateRandomProfileLink());
             natasha.setBio("I can defeat anyone, but I still can't open a stubborn pickle jar.");
             natasha.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             natasha.setRoles(Set.of(authorRole));
@@ -148,7 +155,7 @@ public class SeedData implements CommandLineRunner {
             clint.setLastName("Barton");
             clint.setUsername("clint.barton");
             clint.setEmail("clint.barton@avengers.com");
-            clint.setProfilePicLink(PROFILE_PIC_LINK);
+            clint.setProfilePicLink(generateRandomProfileLink());
             clint.setBio("Professional archer. Professional dad joke maker.");
             clint.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             clint.setRoles(Set.of(userRole));
@@ -159,7 +166,7 @@ public class SeedData implements CommandLineRunner {
             thor.setLastName("Odinson");
             thor.setUsername("thor.odinson");
             thor.setEmail("thor.odinson@asgard.com");
-            thor.setProfilePicLink(PROFILE_PIC_LINK);
+            thor.setProfilePicLink(generateRandomProfileLink());
             thor.setBio("God of Thunder, destroyer of coffee mugs.");
             thor.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             thor.setRoles(Set.of(authorRole));
@@ -170,7 +177,7 @@ public class SeedData implements CommandLineRunner {
             loki.setLastName("Laufeyson");
             loki.setUsername("loki.laufeyson");
             loki.setEmail("loki.laufeyson@asgard.com");
-            loki.setProfilePicLink(PROFILE_PIC_LINK);
+            loki.setProfilePicLink(generateRandomProfileLink());
             loki.setBio("Master of illusions and stealing everyone's snacks.");
             loki.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             loki.setRoles(Set.of(userRole));
@@ -181,7 +188,7 @@ public class SeedData implements CommandLineRunner {
             wanda.setLastName("Maximoff");
             wanda.setUsername("wanda.maximoff");
             wanda.setEmail("wanda.maximoff@avengers.com");
-            wanda.setProfilePicLink(PROFILE_PIC_LINK);
+            wanda.setProfilePicLink(generateRandomProfileLink());
             wanda.setBio("Reality is optional when you have enough chaos magic.");
             wanda.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             wanda.setRoles(Set.of(authorRole));
@@ -192,7 +199,7 @@ public class SeedData implements CommandLineRunner {
             vision.setLastName("Android");
             vision.setUsername("vision.android");
             vision.setEmail("vision@avengers.com");
-            vision.setProfilePicLink(PROFILE_PIC_LINK);
+            vision.setProfilePicLink(generateRandomProfileLink());
             vision.setBio("I calculated that humans require more pizza.");
             vision.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             vision.setRoles(Set.of(userRole));
@@ -203,7 +210,7 @@ public class SeedData implements CommandLineRunner {
             sam.setLastName("Wilson");
             sam.setUsername("sam.wilson");
             sam.setEmail("sam.wilson@avengers.com");
-            sam.setProfilePicLink(PROFILE_PIC_LINK);
+            sam.setProfilePicLink(generateRandomProfileLink());
             sam.setBio("Captain America's backup and professional bird enthusiast.");
             sam.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             sam.setRoles(Set.of(authorRole));
@@ -214,7 +221,7 @@ public class SeedData implements CommandLineRunner {
             bucky.setLastName("Barnes");
             bucky.setUsername("bucky.barnes");
             bucky.setEmail("bucky.barnes@avengers.com");
-            bucky.setProfilePicLink(PROFILE_PIC_LINK);
+            bucky.setProfilePicLink(generateRandomProfileLink());
             bucky.setBio("I remember everything except where I put my keys.");
             bucky.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             bucky.setRoles(Set.of(userRole));
@@ -225,7 +232,7 @@ public class SeedData implements CommandLineRunner {
             scott.setLastName("Lang");
             scott.setUsername("scott.lang");
             scott.setEmail("scott.lang@avengers.com");
-            scott.setProfilePicLink(PROFILE_PIC_LINK);
+            scott.setProfilePicLink(generateRandomProfileLink());
             scott.setBio("I make small problems smaller. Literally.");
             scott.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             scott.setRoles(Set.of(authorRole));
@@ -236,7 +243,7 @@ public class SeedData implements CommandLineRunner {
             hope.setLastName("VanDyne");
             hope.setUsername("hope.vandyne");
             hope.setEmail("hope.vandyne@avengers.com");
-            hope.setProfilePicLink(PROFILE_PIC_LINK);
+            hope.setProfilePicLink(generateRandomProfileLink());
             hope.setBio("The responsible Ant-Man in the room.");
             hope.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             hope.setRoles(Set.of(userRole));
@@ -247,7 +254,7 @@ public class SeedData implements CommandLineRunner {
             peter.setLastName("Parker");
             peter.setUsername("peter.parker");
             peter.setEmail("peter.parker@avengers.com");
-            peter.setProfilePicLink(PROFILE_PIC_LINK);
+            peter.setProfilePicLink(generateRandomProfileLink());
             peter.setBio("Friendly neighborhood bug-themed superhero.");
             peter.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             peter.setRoles(Set.of(authorRole));
@@ -258,7 +265,7 @@ public class SeedData implements CommandLineRunner {
             stephen.setLastName("Strange");
             stephen.setUsername("stephen.strange");
             stephen.setEmail("stephen.strange@avengers.com");
-            stephen.setProfilePicLink(PROFILE_PIC_LINK);
+            stephen.setProfilePicLink(generateRandomProfileLink());
             stephen.setBio("Doctor, wizard, and professional reality fixer.");
             stephen.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             stephen.setRoles(Set.of(adminRole));
@@ -269,7 +276,7 @@ public class SeedData implements CommandLineRunner {
             carol.setLastName("Danvers");
             carol.setUsername("carol.danvers");
             carol.setEmail("carol.danvers@avengers.com");
-            carol.setProfilePicLink(PROFILE_PIC_LINK);
+            carol.setProfilePicLink(generateRandomProfileLink());
             carol.setBio("I fly faster than your internet connection.");
             carol.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             carol.setRoles(Set.of(authorRole));
@@ -280,7 +287,7 @@ public class SeedData implements CommandLineRunner {
             tChalla.setLastName("BlackPanther");
             tChalla.setUsername("tchalla.blackpanther");
             tChalla.setEmail("tchalla@wakanda.com");
-            tChalla.setProfilePicLink(PROFILE_PIC_LINK);
+            tChalla.setProfilePicLink(generateRandomProfileLink());
             tChalla.setBio("King of Wakanda. Destroyer of bad fashion choices.");
             tChalla.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             tChalla.setRoles(Set.of(adminRole));
@@ -291,7 +298,7 @@ public class SeedData implements CommandLineRunner {
             shuri.setLastName("Wakanda");
             shuri.setUsername("shuri.wakanda");
             shuri.setEmail("shuri@wakanda.com");
-            shuri.setProfilePicLink(PROFILE_PIC_LINK);
+            shuri.setProfilePicLink(generateRandomProfileLink());
             shuri.setBio("The smartest person here. Probably.");
             shuri.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             shuri.setRoles(Set.of(authorRole));
@@ -302,7 +309,7 @@ public class SeedData implements CommandLineRunner {
             okoye.setLastName("DoraMilaje");
             okoye.setUsername("okoye.doramilaje");
             okoye.setEmail("okoye@wakanda.com");
-            okoye.setProfilePicLink(PROFILE_PIC_LINK);
+            okoye.setProfilePicLink(generateRandomProfileLink());
             okoye.setBio("I protect Wakanda and judge your hairstyle.");
             okoye.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             okoye.setRoles(Set.of(userRole));
@@ -313,7 +320,7 @@ public class SeedData implements CommandLineRunner {
             rocket.setLastName("Raccoon");
             rocket.setUsername("rocket.raccoon");
             rocket.setEmail("rocket@guardians.com");
-            rocket.setProfilePicLink(PROFILE_PIC_LINK);
+            rocket.setProfilePicLink(generateRandomProfileLink());
             rocket.setBio("Genius, engineer, and definitely not a raccoon.");
             rocket.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             rocket.setRoles(Set.of(authorRole));
@@ -324,7 +331,7 @@ public class SeedData implements CommandLineRunner {
             groot.setLastName("Tree");
             groot.setUsername("groot.tree");
             groot.setEmail("groot@guardians.com");
-            groot.setProfilePicLink(PROFILE_PIC_LINK);
+            groot.setProfilePicLink(generateRandomProfileLink());
             groot.setBio("I am Groot. Translation: I need snacks.");
             groot.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             groot.setRoles(Set.of(userRole));
@@ -335,7 +342,7 @@ public class SeedData implements CommandLineRunner {
             gamora.setLastName("ZenWhoberi");
             gamora.setUsername("gamora.zenwhoberi");
             gamora.setEmail("gamora@guardians.com");
-            gamora.setProfilePicLink(PROFILE_PIC_LINK);
+            gamora.setProfilePicLink(generateRandomProfileLink());
             gamora.setBio("Deadliest warrior, worst dancer.");
             gamora.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             gamora.setRoles(Set.of(authorRole));
@@ -346,7 +353,7 @@ public class SeedData implements CommandLineRunner {
             drax.setLastName("Destroyer");
             drax.setUsername("drax.destroyer");
             drax.setEmail("drax@guardians.com");
-            drax.setProfilePicLink(PROFILE_PIC_LINK);
+            drax.setProfilePicLink(generateRandomProfileLink());
             drax.setBio("I am invisible when standing perfectly still.");
             drax.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             drax.setRoles(Set.of(userRole));
@@ -357,7 +364,7 @@ public class SeedData implements CommandLineRunner {
             nebula.setLastName("Titan");
             nebula.setUsername("nebula.titan");
             nebula.setEmail("nebula@guardians.com");
-            nebula.setProfilePicLink(PROFILE_PIC_LINK);
+            nebula.setProfilePicLink(generateRandomProfileLink());
             nebula.setBio("Cybernetic warrior with emotional WiFi problems.");
             nebula.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             nebula.setRoles(Set.of(userRole));
@@ -368,7 +375,7 @@ public class SeedData implements CommandLineRunner {
             wong.setLastName("Master");
             wong.setUsername("wong.master");
             wong.setEmail("wong@kamar-taj.com");
-            wong.setProfilePicLink(PROFILE_PIC_LINK);
+            wong.setProfilePicLink(generateRandomProfileLink());
             wong.setBio("I guard magical doors and the snack table.");
             wong.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             wong.setRoles(Set.of(adminRole));
@@ -379,7 +386,7 @@ public class SeedData implements CommandLineRunner {
             valkyrie.setLastName("Asgard");
             valkyrie.setUsername("valkyrie.asgard");
             valkyrie.setEmail("valkyrie@asgard.com");
-            valkyrie.setProfilePicLink(PROFILE_PIC_LINK);
+            valkyrie.setProfilePicLink(generateRandomProfileLink());
             valkyrie.setBio("Warrior, rider, and occasional horse therapist.");
             valkyrie.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             valkyrie.setRoles(Set.of(authorRole));
@@ -390,7 +397,7 @@ public class SeedData implements CommandLineRunner {
             kate.setLastName("Bishop");
             kate.setUsername("kate.bishop");
             kate.setEmail("kate.bishop@avengers.com");
-            kate.setProfilePicLink(PROFILE_PIC_LINK);
+            kate.setProfilePicLink(generateRandomProfileLink());
             kate.setBio("Hawkeye but with more confidence and fewer arrows.");
             kate.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             kate.setRoles(Set.of(userRole));
@@ -401,7 +408,7 @@ public class SeedData implements CommandLineRunner {
             yelena.setLastName("Belova");
             yelena.setUsername("yelena.belova");
             yelena.setEmail("yelena.belova@avengers.com");
-            yelena.setProfilePicLink(PROFILE_PIC_LINK);
+            yelena.setProfilePicLink(generateRandomProfileLink());
             yelena.setBio("Black Widow energy with unlimited sarcasm.");
             yelena.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             yelena.setRoles(Set.of(userRole));
@@ -412,7 +419,7 @@ public class SeedData implements CommandLineRunner {
             happy.setLastName("Hogan");
             happy.setUsername("happy.hogan");
             happy.setEmail("happy.hogan@starkindustries.com");
-            happy.setProfilePicLink(PROFILE_PIC_LINK);
+            happy.setProfilePicLink(generateRandomProfileLink());
             happy.setBio("Bodyguard, driver, and professional babysitter.");
             happy.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             happy.setRoles(Set.of(userRole));
@@ -423,7 +430,7 @@ public class SeedData implements CommandLineRunner {
             wongAdmin.setLastName("Ramirez");
             wongAdmin.setUsername("maria.ramirez");
             wongAdmin.setEmail("maria.ramirez@shield.com");
-            wongAdmin.setProfilePicLink(PROFILE_PIC_LINK);
+            wongAdmin.setProfilePicLink(generateRandomProfileLink());
             wongAdmin.setBio("SHIELD administrator. The paperwork never ends.");
             wongAdmin.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
             wongAdmin.setRoles(Set.of(adminRole));

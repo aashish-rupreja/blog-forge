@@ -17,6 +17,8 @@ public record BlogDetailsResponse(
         long likeCount,
         long dislikeCount,
         boolean commentsEnabled,
-        long commentCount
+        long commentCount,
+        String authorUsername,
+        String authorProfilePicLink
 ) {
 }
