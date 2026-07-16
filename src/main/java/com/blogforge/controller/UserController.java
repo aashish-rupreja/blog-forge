@@ -112,4 +112,17 @@ public class UserController {
         UserProfileResponse myProfile = userService.getUserProfile(currentUserUsername);
         return new ResponseEntity<>(myProfile, HttpStatus.OK);
     }
+
+    @Operation(summary = "Delete my profile", description = "Permanently deletes or schedules deletion of the currently authenticated user's profile",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
+    })
+    @DeleteMapping(path = "/api/v1/users/me")
+    public ResponseEntity<GenericResponse> deleteProfile(
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        GenericResponse gr = userService.deleteProfile(principal.getUsername());
+        return new ResponseEntity<>(gr, HttpStatus.OK);
+    }
 }

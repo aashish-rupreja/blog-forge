@@ -14,6 +14,7 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.repository.BlogRepository;
 import com.blogforge.repository.CommentRepository;
+import com.blogforge.repository.UserRepository;
 import com.blogforge.security.CustomUserDetails;
 import com.blogforge.service.CommentService;
 import com.blogforge.specification.comment.CommentSpecification;
@@ -38,12 +39,14 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final BlogRepository blogRepository;
+    private final UserRepository userRepository;
     private final CommentMapper commentMapper;
     private final MessageResolver messageResolver;
 
-    public CommentServiceImpl(CommentRepository commentRepository, BlogRepository blogRepository, CommentMapper commentMapper, MessageResolver messageResolver) {
+    public CommentServiceImpl(CommentRepository commentRepository, BlogRepository blogRepository, UserRepository userRepository, CommentMapper commentMapper, MessageResolver messageResolver) {
         this.commentRepository = commentRepository;
         this.blogRepository = blogRepository;
+        this.userRepository = userRepository;
         this.commentMapper = commentMapper;
         this.messageResolver = messageResolver;
     }
@@ -70,9 +73,17 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_USER')")
-    public CommentResponse addComment(String slug, CreateCommentRequest dto, User commentor) {
+    public CommentResponse addComment(String slug, CreateCommentRequest dto, String commentorUsername) {
+        User user = userRepository.findByUsernameIgnoreCase(commentorUsername)
+                .orElseThrow(() -> {
+                    String userNotFoundMsg = messageResolver.getMessage(
+                            "entity.not-found",
+                            "User", commentorUsername);
+                    LOG.warn(userNotFoundMsg);
+                    return new EntityNotFoundException(userNotFoundMsg);
+                });
         Comment c = commentMapper.fromCreateRequestToEntity(dto);
-        c.setOwner(commentor);
+        c.setOwner(user);
 
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> {
@@ -115,6 +126,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_AUTHOR', 'ROLE_ADMIN')")
     public GenericResponse delete(UUID id, CustomUserDetails principal) {
+
         Comment c = commentRepository.findById(id)
                 .orElseThrow(() -> {
                     String commentNotFoundMsg = messageResolver.getMessage(
@@ -145,6 +157,6 @@ public class CommentServiceImpl implements CommentService {
         }
         commentRepository.delete(c);
         LOG.info("Comment identified by {} is deleted", c.getUuid());
-        return new GenericResponse(messageResolver.getMessage("comment.delete.msg"));
+        return new GenericResponse(messageResolver.getMessage("comment.deleted"));
     }
 }

@@ -5,6 +5,7 @@ import com.blogforge.dto.GenericResponse;
 import com.blogforge.dto.user.*;
 import com.blogforge.entity.Role;
 import com.blogforge.entity.User;
+import com.blogforge.entity.UserStatus;
 import com.blogforge.exception.MessageResolver;
 import com.blogforge.exception.PasswordMismatchException;
 import com.blogforge.mapper.UserMapper;
@@ -192,6 +193,29 @@ public class UserServiceImpl implements UserService {
         user.setRoles(roles);
         userRepository.save(user);
         LOG.info("Granted {} to {}", Constants.AUTHOR_ROLE_NAME, user.getUsername());
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    public GenericResponse deleteProfile(String authenticatedUsername) {
+        LOG.info("Attempting profile deletion for User \"{}\"", authenticatedUsername);
+        User user = getUserOrThrow(authenticatedUsername);
+        try {
+            userRepository.delete(user);
+            userRepository.flush();
+            return new GenericResponse("Profile deleted successfully.");
+        } catch (Exception ex) {
+            // Fallback to soft delete/anonymization if database constraints prevent hard deletion
+            user.setStatus(UserStatus.DELETION_SCHEDULED);
+            user.setBio("Deleted account");
+            user.setProfilePicLink(null);
+            user.setFirstName("Deleted");
+            user.setLastName("User");
+            user.setPasswordHash("");
+            userRepository.save(user);
+            return new GenericResponse("Profile scheduled for deletion successfully.");
+        }
     }
 
     public User getUserOrThrow(String username) {

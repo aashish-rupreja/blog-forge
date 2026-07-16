@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class BlogSpecification {
 
@@ -112,10 +113,14 @@ public class BlogSpecification {
             spec = spec.and(publishedOn(specParams.publishedOn()));
         }
         if(specParams.categories() != null && !specParams.categories().isEmpty()) {
-            spec = spec.and(categoriesIn(specParams.categories()));
+            Set<String> normalized = specParams.categories()
+                    .stream().map(String::toLowerCase).collect(Collectors.toSet());
+            spec = spec.and(categoriesIn(normalized));
         }
         if(specParams.tags() != null && !specParams.tags().isEmpty()) {
-            spec = spec.and(tagsIn(specParams.tags()));
+            Set<String> normalized = specParams.tags()
+                    .stream().map(String::toLowerCase).collect(Collectors.toSet());
+            spec = spec.and(tagsIn(normalized));
         }
 
         return spec;

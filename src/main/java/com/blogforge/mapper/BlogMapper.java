@@ -36,7 +36,9 @@ public class BlogMapper {
                 b.getReactions().stream().filter(r -> r.getReactionType().equals(ReactionType.LIKE)).count(),
                 b.getReactions().stream().filter(r -> r.getReactionType().equals(ReactionType.DISLIKE)).count(),
                 b.isEnableComments(),
-                b.getComments().size()
+                b.getComments().size(),
+                b.getAuthor() != null ? b.getAuthor().getUsername() : null,
+                b.getAuthor() != null ? b.getAuthor().getProfilePicLink() : null
         );
     }
 
@@ -52,10 +54,11 @@ public class BlogMapper {
                 b.getCategories().stream().map(Category::getName).collect(Collectors.toSet()),
                 b.getTags().stream().map(Tag::getName).collect(Collectors.toSet()),
                 b.getPublishedAt(),
-                b.getReactions().stream().filter(r -> r.equals(ReactionType.LIKE)).count(),
-                b.getReactions().stream().filter(r -> r.equals(ReactionType.DISLIKE)).count(),
+                b.getReactions().stream().filter(r -> r.getReactionType().equals(ReactionType.LIKE)).count(),
+                b.getReactions().stream().filter(r -> r.getReactionType().equals(ReactionType.DISLIKE)).count(),
                 b.isEnableComments(),
-                b.getComments().size()
+                b.getComments().size(),
+                b.getAuthor() != null ? b.getAuthor().getProfilePicLink() : null
         );
     }
 }

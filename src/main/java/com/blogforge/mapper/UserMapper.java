@@ -54,6 +54,7 @@ public class UserMapper {
                 u.getFirstName(),
                 u.getLastName(),
                 u.getUsername(),
+                u.getEmail(),
                 u.getProfilePicLink(),
                 u.getBio()
         );

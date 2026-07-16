@@ -19,7 +19,7 @@ public interface CommentService {
     CommentResponse addComment(
             String blogSlug,
             CreateCommentRequest dto,
-            User commentor
+            String commentorUsername
     );
 
     CommentResponse partialUpdate(

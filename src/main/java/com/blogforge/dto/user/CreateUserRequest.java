@@ -17,7 +17,7 @@ public record CreateUserRequest(
         @NotBlank(message = "{user.username.notBlank}")
         @Size(min = 3, max = 10, message = "{user.username.size}")
         @Pattern(
-                regexp = "^[A-Za-z0-9_]+$",
+                regexp = "^[A-Za-z0-9_.]+$",
                 message = "{user.username.pattern}"
         )
         String username,

@@ -284,7 +284,13 @@ public class BlogServiceImpl implements BlogService {
         } else {
             Reaction reaction = new Reaction();
             reaction.setBlog(blog);
-            reaction.setReactor(principal.getUser());
+            User user = userRepository.findByUsernameIgnoreCase(principal.getUsername())
+                    .orElseThrow(() -> {
+                        String notFound = messageResolver.getMessage("entity.not-found", "User", principal.getUsername());
+                        LOG.warn(notFound);
+                        return new EntityNotFoundException(notFound);
+                    });
+            reaction.setReactor(user);
             reaction.setReactionType(dto.reactionType());
             reactionRepository.save(reaction);
             reactionMsg = messageResolver.getMessage("blog.reaction.add", dto.reactionType().toString(), slug);
