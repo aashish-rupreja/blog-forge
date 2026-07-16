@@ -38,7 +38,8 @@ public class BlogMapper {
                 b.isEnableComments(),
                 b.getComments().size(),
                 b.getAuthor() != null ? b.getAuthor().getUsername() : null,
-                b.getAuthor() != null ? b.getAuthor().getProfilePicLink() : null
+                b.getAuthor() != null ? b.getAuthor().getProfilePicLink() : null,
+                b.getStatus()
         );
     }
 
@@ -58,7 +59,8 @@ public class BlogMapper {
                 b.getReactions().stream().filter(r -> r.getReactionType().equals(ReactionType.DISLIKE)).count(),
                 b.isEnableComments(),
                 b.getComments().size(),
-                b.getAuthor() != null ? b.getAuthor().getProfilePicLink() : null
+                b.getAuthor() != null ? b.getAuthor().getProfilePicLink() : null,
+                b.getStatus()
         );
     }
 }

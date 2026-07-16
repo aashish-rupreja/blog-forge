@@ -19,6 +19,7 @@ public record BlogDetailsResponse(
         boolean commentsEnabled,
         long commentCount,
         String authorUsername,
-        String authorProfilePicLink
+        String authorProfilePicLink,
+        com.blogforge.entity.BlogStatus blogStatus
 ) {
 }
