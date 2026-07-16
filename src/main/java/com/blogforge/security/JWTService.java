@@ -61,7 +61,7 @@ public class JWTService {
     }
 
     public List<? extends GrantedAuthority> extractAuthorities(String token) {
-        List<String> roles = (List<String>) extractAllClaims(token);
+        List<String> roles = (List<String>) extractAllClaims(token).get("roles");
         return roles.stream()
                 .map(s -> new SimpleGrantedAuthority(s))
                 .toList();
