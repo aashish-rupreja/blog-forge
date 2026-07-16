@@ -1,5 +1,6 @@
 package com.blogforge.security;
 
+import com.blogforge.entity.Role;
 import com.blogforge.entity.User;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,31 +10,41 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    private String username;
+    private String passwordHash;
+    private Collection<? extends GrantedAuthority> roles;
 
-    public CustomUserDetails(User user) {
-        this.user = user;
+    public CustomUserDetails(String username, String passwordHash, Collection<? extends GrantedAuthority> roles) {
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.roles = roles;
     }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles()
-                .stream()
-                .map(r -> new SimpleGrantedAuthority(r.getName()))
+    public CustomUserDetails(User user) {
+        this.username = user.getUsername();
+        this.passwordHash = user.getPasswordHash();
+        this.roles = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .toList();
     }
 
     @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles;
+    }
+
+    @Override
     public @Nullable String getPassword() {
-        return user.getPasswordHash();
+        return passwordHash;
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return username;
     }
 
     @Override
@@ -54,9 +65,5 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
-    }
-
-    public User getUser() {
-        return user;
     }
 }
