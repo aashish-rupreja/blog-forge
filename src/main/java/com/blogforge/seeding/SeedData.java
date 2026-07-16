@@ -29,6 +29,12 @@ public class SeedData implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    public String generateRandomProfileLink() {
+        Random random = new Random();
+        int randomNo = random.nextInt(1, 40);
+        return "https://i.pravatar.cc/150?img="+String.valueOf(randomNo);
+    }
+
     public SeedData(
             AuthorApplicationRepository authorApplicationRepository,
             BlogRepository blogRepository,
@@ -83,25 +89,25 @@ public class SeedData implements CommandLineRunner {
 
             // 2. Users setup (Exactly 15 users)
             // Group A: 5 users with just ROLE_USER
-            User maria = createUser("Maria", "Hill", "m.hill", "maria.hill@shield.com", Set.of(userRole));
-            User pepper = createUser("Pepper", "Potts", "potts.pepper", "pepper.potts@starkindustries.com", Set.of(userRole));
-            User clint = createUser("Clint", "Barton", "clint.barton", "clint.barton@avengers.com", Set.of(userRole));
-            User loki = createUser("Loki", "Laufeyson", "loki.laufeyson", "loki.laufeyson@asgard.com", Set.of(userRole));
-            User vision = createUser("Vision", "Android", "vision.android", "vision@avengers.com", Set.of(userRole));
+            User maria = createUser("Maria", "Hill", "m.hill", "maria.hill@shield.com", Set.of(userRole), generateRandomProfileLink());
+            User pepper = createUser("Pepper", "Potts", "potts.pepper", "pepper.potts@starkindustries.com", Set.of(userRole), generateRandomProfileLink());
+            User clint = createUser("Clint", "Barton", "clint.barton", "clint.barton@avengers.com", Set.of(userRole), generateRandomProfileLink());
+            User loki = createUser("Loki", "Laufeyson", "loki.laufeyson", "loki.laufeyson@asgard.com", Set.of(userRole), generateRandomProfileLink());
+            User vision = createUser("Vision", "Android", "vision.android", "vision@avengers.com", Set.of(userRole), generateRandomProfileLink());
 
             // Group B: 5 users with ROLE_AUTHOR and ROLE_USER
-            User steve = createUser("Steve", "Rogers", "steve.rogers", "steve.rogers@avengers.com", Set.of(userRole, authorRole));
-            User bruce = createUser("Bruce", "Banner", "bruce.banner", "bruce.banner@avengers.com", Set.of(userRole, authorRole));
-            User natasha = createUser("Natasha", "Romanoff", "natasha.romanoff", "natasha.romanoff@avengers.com", Set.of(userRole, authorRole));
-            User thor = createUser("Thor", "Odinson", "thor.odinson", "thor.odinson@asgard.com", Set.of(userRole, authorRole));
-            User wanda = createUser("Wanda", "Maximoff", "wanda.maximoff", "wanda.maximoff@avengers.com", Set.of(userRole, authorRole));
+            User steve = createUser("Steve", "Rogers", "steve.rogers", "steve.rogers@avengers.com", Set.of(userRole, authorRole), generateRandomProfileLink());
+            User bruce = createUser("Bruce", "Banner", "bruce.banner", "bruce.banner@avengers.com", Set.of(userRole, authorRole), generateRandomProfileLink());
+            User natasha = createUser("Natasha", "Romanoff", "natasha.romanoff", "natasha.romanoff@avengers.com", Set.of(userRole, authorRole), generateRandomProfileLink());
+            User thor = createUser("Thor", "Odinson", "thor.odinson", "thor.odinson@asgard.com", Set.of(userRole, authorRole), generateRandomProfileLink());
+            User wanda = createUser("Wanda", "Maximoff", "wanda.maximoff", "wanda.maximoff@avengers.com", Set.of(userRole, authorRole), generateRandomProfileLink());
 
             // Group C: 5 users with ROLE_ADMIN and ROLE_USER
-            User nick = createUser("Nick", "Fury", "fury.nicholas.j", "fury.nicholas.j@shield.com", Set.of(userRole, adminRole));
-            User tony = createUser("Tony", "Stark", "t.stark", "ts@starkindustries.com", Set.of(userRole, adminRole));
-            User stephen = createUser("Stephen", "Strange", "stephen.strange", "stephen.strange@avengers.com", Set.of(userRole, adminRole));
-            User wong = createUser("Wong", "Master", "wong.master", "wong@kamar-taj.com", Set.of(userRole, adminRole));
-            User mariaAdmin = createUser("Maria", "Ramirez", "maria.ramirez", "maria.ramirez@shield.com", Set.of(userRole, adminRole));
+            User nick = createUser("Nick", "Fury", "fury.nicholas.j", "fury.nicholas.j@shield.com", Set.of(userRole, adminRole), generateRandomProfileLink());
+            User tony = createUser("Tony", "Stark", "t.stark", "ts@starkindustries.com", Set.of(userRole, adminRole), generateRandomProfileLink());
+            User stephen = createUser("Stephen", "Strange", "stephen.strange", "stephen.strange@avengers.com", Set.of(userRole, adminRole), generateRandomProfileLink());
+            User wong = createUser("Wong", "Master", "wong.master", "wong@kamar-taj.com", Set.of(userRole, adminRole), generateRandomProfileLink());
+            User mariaAdmin = createUser("Maria", "Ramirez", "maria.ramirez", "maria.ramirez@shield.com", Set.of(userRole, adminRole), generateRandomProfileLink());
 
             List<User> usersList = List.of(
                 maria, pepper, clint, loki, vision,
@@ -268,7 +274,7 @@ public class SeedData implements CommandLineRunner {
         }
     }
 
-    private User createUser(String firstName, String lastName, String username, String email, Set<Role> roles) {
+    private User createUser(String firstName, String lastName, String username, String email, Set<Role> roles, String profilePicLink) {
         User user = new User();
         user.setFirstName(firstName);
         user.setLastName(lastName);
@@ -278,6 +284,7 @@ public class SeedData implements CommandLineRunner {
         user.setPasswordHash(passwordEncoder.encode(DEFAULT_PASSWORD));
         user.setRoles(new HashSet<>(roles));
         user.setStatus(UserStatus.ENABLED);
+        user.setProfilePicLink(profilePicLink);
         return user;
     }
 }
