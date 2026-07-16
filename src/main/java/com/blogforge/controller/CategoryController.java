@@ -8,11 +8,19 @@ import com.blogforge.pagination.PagedResponse;
 import com.blogforge.pagination.PaginationRequestParams;
 import com.blogforge.service.CategoryService;
 import com.blogforge.specification.category.CategorySpecificationParams;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Categories", description = "Endpoints for managing blog categories")
 @RestController
 public class CategoryController {
 
@@ -22,6 +30,10 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
+    @Operation(summary = "Get all categories", description = "Returns a paginated list of categories. Supports filtering/searching.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Paginated list of categories returned successfully")
+    })
     @GetMapping(path = "/api/v1/categories")
     public ResponseEntity<PagedResponse<CategoryResponse>> getAll(
             @ModelAttribute PaginationRequestParams reqParams,
@@ -31,18 +43,39 @@ public class CategoryController {
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
+    @Operation(summary = "Get category by name", description = "Fetches a specific category by its unique name.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Category returned successfully"),
+            @ApiResponse(responseCode = "404", description = "Category not found", content = @Content)
+    })
     @GetMapping(path = "/api/v1/categories/{name}")
-    public ResponseEntity<CategoryResponse> getByName(@PathVariable  String name) {
+    public ResponseEntity<CategoryResponse> getByName(
+            @Parameter(description = "The unique name of the category") @PathVariable String name) {
         CategoryResponse cr = categoryService.getByName(name);
         return new ResponseEntity<>(cr, HttpStatus.OK);
     }
 
+    @Operation(summary = "Create a category", description = "Creates a new category.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Category created successfully"),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Category already exists", content = @Content)
+    })
     @PostMapping(path = "/api/v1/categories")
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CreateCategoryRequest dto) {
         CategoryResponse cr = categoryService.create(dto);
         return new ResponseEntity<>(cr, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Delete categories", description = "Deletes specified categories.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Categories deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "404", description = "One or more categories not found", content = @Content)
+    })
     @DeleteMapping(path = "/api/v1/categories")
     public ResponseEntity<GenericResponse> delete(@Valid @RequestBody DeleteCategoryRequest dto) {
         GenericResponse gr = categoryService.delete(dto);
