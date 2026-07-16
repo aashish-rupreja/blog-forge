@@ -50,7 +50,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JWTFilter jwtFilter() {
-        return new JWTFilter();
+    public JWTFilter jwtFilter(JWTService jwtService) {
+        return new JWTFilter(jwtService);
     }
 }
