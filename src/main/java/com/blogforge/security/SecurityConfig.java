@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -20,10 +21,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JWTFilter jwtFilter) {
         http
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(Customizer.withDefaults())
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().authenticated()
                 );
@@ -45,5 +47,10 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(DaoAuthenticationProvider daoAuthenticationProvider) {
         return new ProviderManager(daoAuthenticationProvider);
+    }
+
+    @Bean
+    public JWTFilter jwtFilter() {
+        return new JWTFilter();
     }
 }
