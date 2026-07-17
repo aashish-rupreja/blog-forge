@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authors", description = "Endpoints for author profiles and listings")
 @RestController
 public class AuthorController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorController.class);
 
     private final AuthorService authorService;
     private final FollowService followService;
@@ -45,7 +49,9 @@ public class AuthorController {
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute UserSpecificationParams specParams
     ) {
+        LOG.trace("Entering getAll with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedResponse<UserSummaryResponse> upr = authorService.getAllAuthorSummary(reqParams, specParams);
+        LOG.trace("Exiting getAll with response count: {}", upr.getContent() != null ? upr.getContent().size() : 0);
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 
@@ -58,12 +64,14 @@ public class AuthorController {
     public ResponseEntity<AuthorProfileResponse> getAuthorProfile(
             @Parameter(description = "The username of the author") @PathVariable String username,
             @AuthenticationPrincipal UserDetails principal) {
+        LOG.trace("Entering getAuthorProfile with username: {}, principal: {}", username, principal != null ? principal.getUsername() : null);
 
         String authenticatedUsername = (principal != null)
                 ? principal.getUsername()
                 : null;
 
         AuthorProfileResponse apr = authorService.getAuthorProfile(username, authenticatedUsername);
+        LOG.trace("Exiting getAuthorProfile with response: {}", apr);
         return new ResponseEntity<>(apr, HttpStatus.OK);
     }
 
@@ -76,9 +84,11 @@ public class AuthorController {
     })
     @GetMapping(path = "/api/v1/authors/me")
     public ResponseEntity<AuthorProfileResponse> getMyProfile(@AuthenticationPrincipal UserDetails principal) {
+        LOG.trace("Entering getMyProfile with principal: {}", principal != null ? principal.getUsername() : null);
         String currentUserUsername = (principal != null)
                 ? principal.getUsername() : null;
         AuthorProfileResponse myProfile = authorService.getMyProfile(currentUserUsername);
+        LOG.trace("Exiting getMyProfile with response: {}", myProfile);
         return new ResponseEntity<>(myProfile, HttpStatus.OK);
     }
 
@@ -95,7 +105,9 @@ public class AuthorController {
     public ResponseEntity<GenericResponse> followAuthor(
             @Parameter(description = "The username of the author to follow") @PathVariable String username,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering followAuthor with username: {}, principal: {}", username, principal != null ? principal.getUsername() : null);
         GenericResponse gr = followService.create(username, principal.getUsername());
+        LOG.trace("Exiting followAuthor with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.CREATED);
     }
 
@@ -112,7 +124,9 @@ public class AuthorController {
     public ResponseEntity<GenericResponse> unfollowAuthor(
             @Parameter(description = "The username of the author to unfollow") @PathVariable String username,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering unfollowAuthor with username: {}, principal: {}", username, principal != null ? principal.getUsername() : null);
         GenericResponse gr = followService.delete(username, principal.getUsername());
+        LOG.trace("Exiting unfollowAuthor with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.CREATED);
     }
 }

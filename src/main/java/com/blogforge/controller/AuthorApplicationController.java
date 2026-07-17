@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +29,8 @@ import java.util.UUID;
 @Tag(name = "Author Applications", description = "Endpoints for managing user applications to become authors")
 @RestController
 public class AuthorApplicationController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorApplicationController.class);
 
     private final AuthorApplicationService authorApplicationService;
 
@@ -46,7 +50,9 @@ public class AuthorApplicationController {
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute AuthorApplicationSpecificationParams specParams
             ) {
+        LOG.trace("Entering getAll with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getAll(reqParams, specParams);
+        LOG.trace("Exiting getAll with responses count: {}", responses.getContent() != null ? responses.getContent().size() : 0);
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
@@ -61,7 +67,9 @@ public class AuthorApplicationController {
     @GetMapping(path = "/api/v1/author-applications/{uuid}")
     public ResponseEntity<AuthorApplicationResponse> getSingleApplication(
             @Parameter(description = "The UUID of the author application") @PathVariable UUID uuid) {
+        LOG.trace("Entering getSingleApplication with uuid: {}", uuid);
         AuthorApplicationResponse aar = authorApplicationService.getSingleApplication(uuid);
+        LOG.trace("Exiting getSingleApplication with response: {}", aar);
         return new ResponseEntity<>(aar, HttpStatus.OK);
     }
 
@@ -77,7 +85,9 @@ public class AuthorApplicationController {
             @ModelAttribute MyAuthorApplicationsRequest specParams,
             @AuthenticationPrincipal CustomUserDetails principal
             ) {
+        LOG.trace("Entering getMyAuthorApplications with reqParams: {}, specParams: {}, principal: {}", reqParams, specParams, principal != null ? principal.getUsername() : null);
         PagedResponse<AuthorApplicationResponse> responses = authorApplicationService.getMyAuthorApplications(reqParams, specParams, principal.getUsername());
+        LOG.trace("Exiting getMyAuthorApplications with responses count: {}", responses.getContent() != null ? responses.getContent().size() : 0);
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
@@ -92,7 +102,9 @@ public class AuthorApplicationController {
     public ResponseEntity<AuthorApplicationResponse> create(
             @Valid @RequestBody CreateAuthorApplicationRequest dto,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering create with dto: {}, principal: {}", dto, principal != null ? principal.getUsername() : null);
         AuthorApplicationResponse aar = authorApplicationService.create(dto, principal.getUsername());
+        LOG.trace("Exiting create with response: {}", aar);
         return new ResponseEntity<>(aar, HttpStatus.CREATED);
     }
 
@@ -109,7 +121,9 @@ public class AuthorApplicationController {
     public ResponseEntity<AuthorApplicationResponse> approveApplication(
             @Parameter(description = "The UUID of the application to approve") @PathVariable UUID id,
             @Valid @RequestBody UpdateAuthorApplicationRequest dto) {
+        LOG.trace("Entering approveApplication with id: {}, dto: {}", id, dto);
         AuthorApplicationResponse aar = authorApplicationService.approveApplication(id, dto);
+        LOG.trace("Exiting approveApplication with response: {}", aar);
         return new ResponseEntity<>(aar, HttpStatus.OK);
     }
 
@@ -127,7 +141,9 @@ public class AuthorApplicationController {
             @Parameter(description = "The UUID of the application to reject") @PathVariable UUID id,
             @Valid @RequestBody UpdateAuthorApplicationRequest dto
     ) {
+        LOG.trace("Entering rejectApplication with id: {}, dto: {}", id, dto);
         AuthorApplicationResponse aar = authorApplicationService.rejectApplication(id, dto);
+        LOG.trace("Exiting rejectApplication with response: {}", aar);
         return new ResponseEntity<>(aar, HttpStatus.OK);
     }
 }

@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +28,8 @@ import java.util.UUID;
 @Tag(name = "Comments", description = "Endpoints for managing comments on blog posts")
 @RestController
 public class CommentController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CommentController.class);
 
     private final CommentService commentService;
 
@@ -42,7 +46,9 @@ public class CommentController {
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute CommentSpecificationParams specParams
             ) {
+        LOG.trace("Entering getAll with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedResponse<CommentResponse> comments = commentService.getAll(reqParams, specParams);
+        LOG.trace("Exiting getAll with response count: {}", comments.getContent() != null ? comments.getContent().size() : 0);
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 
@@ -60,7 +66,9 @@ public class CommentController {
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody UpdateCommentRequest dto,
             @Parameter(description = "The UUID of the comment") @PathVariable UUID id) {
+        LOG.trace("Entering partialUpdateComment with id: {}, dto: {}, principal: {}", id, dto, principal != null ? principal.getUsername() : null);
         CommentResponse updated = commentService.partialUpdate(id, dto, principal.getUsername());
+        LOG.trace("Exiting partialUpdateComment with response: {}", updated);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
@@ -77,7 +85,9 @@ public class CommentController {
             @Parameter(description = "The UUID of the comment") @PathVariable UUID id,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
+        LOG.trace("Entering deleteComment with id: {}, principal: {}", id, principal != null ? principal.getUsername() : null);
         GenericResponse deleteResponse = commentService.delete(id, principal);
+        LOG.trace("Exiting deleteComment with response: {}", deleteResponse);
         return new ResponseEntity<>(deleteResponse, HttpStatus.OK);
     }
 

@@ -23,6 +23,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,6 +36,8 @@ import java.util.UUID;
 @Tag(name = "Blogs", description = "Endpoints for creating, retrieving, updating, and deleting blog posts")
 @RestController
 public class BlogController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BlogController.class);
 
     private final BlogService blogService;
     private final CommentService commentService;
@@ -52,10 +56,10 @@ public class BlogController {
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute BlogSpecificationParams specParams
     ) {
-
+        LOG.trace("Entering getAllSummary with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedResponse<BlogSummaryResponse> blogs = blogService.getAllSummary(reqParams, specParams);
+        LOG.trace("Exiting getAllSummary with response count: {}", blogs.getContent() != null ? blogs.getContent().size() : 0);
         return new ResponseEntity<>(blogs, HttpStatus.OK);
-
     }
 
     @Operation(summary = "Get blog details by slug", description = "Fetches complete details of a blog post by its unique URL slug.")
@@ -66,7 +70,9 @@ public class BlogController {
     @GetMapping("/api/v1/blogs/{slug}")
     public ResponseEntity<BlogDetailsResponse> getBlogDetails(
             @Parameter(description = "The unique slug of the blog post") @PathVariable String slug) {
+        LOG.trace("Entering getBlogDetails with slug: {}", slug);
         BlogDetailsResponse bdr = blogService.getBlogDetails(slug);
+        LOG.trace("Exiting getBlogDetails with response: {}", bdr);
         return new ResponseEntity<>(bdr, HttpStatus.OK);
     }
 
@@ -81,7 +87,9 @@ public class BlogController {
             @Parameter(description = "The unique slug of the blog post") @PathVariable String slug,
             @ModelAttribute PaginationRequestParams reqParams
     ) {
+        LOG.trace("Entering getBlogComments with slug: {}, reqParams: {}", slug, reqParams);
         PagedResponse<CommentResponse> comments = blogService.getBlogComments(slug, reqParams);
+        LOG.trace("Exiting getBlogComments with response count: {}", comments.getContent() != null ? comments.getContent().size() : 0);
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 
@@ -100,7 +108,9 @@ public class BlogController {
             @Parameter(description = "The unique slug of the blog post") @PathVariable String slug,
             @RequestBody UpdateBlogRequest updateBlogRequest,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering partialUpdate with slug: {}, updateBlogRequest: {}, principal: {}", slug, updateBlogRequest, principal != null ? principal.getUsername() : null);
         BlogDetailsResponse bdr = blogService.partialUpdate(slug, updateBlogRequest, principal);
+        LOG.trace("Exiting partialUpdate with response: {}", bdr);
         return new ResponseEntity<>(bdr, HttpStatus.OK);
     }
 
@@ -115,7 +125,9 @@ public class BlogController {
     @DeleteMapping(path = "/api/v1/blogs/{slug}")
     public ResponseEntity<GenericResponse> delete(
             @Parameter(description = "The unique slug of the blog post") @PathVariable String slug) {
+        LOG.trace("Entering delete with slug: {}", slug);
         GenericResponse gr = blogService.delete(slug);
+        LOG.trace("Exiting delete with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
@@ -129,9 +141,10 @@ public class BlogController {
     public ResponseEntity<PagedResponse<BlogSummaryResponse>> getMyBlogs(
             @ModelAttribute PaginationRequestParams reqParams,
             @AuthenticationPrincipal CustomUserDetails principal) {
-
+        LOG.trace("Entering getMyBlogs with reqParams: {}, principal: {}", reqParams, principal != null ? principal.getUsername() : null);
         String username = (principal != null) ? principal.getUsername() : null;
         PagedResponse<BlogSummaryResponse> myBlogs = blogService.getMyBlogs(reqParams, username);
+        LOG.trace("Exiting getMyBlogs with response count: {}", myBlogs.getContent() != null ? myBlogs.getContent().size() : 0);
         return new ResponseEntity<>(myBlogs, HttpStatus.OK);
     }
 
@@ -147,8 +160,10 @@ public class BlogController {
     public ResponseEntity<BlogDetailsResponse> create(
             @Valid @RequestBody CreateBlogRequest dto,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering create with dto: {}, principal: {}", dto, principal != null ? principal.getUsername() : null);
         String username = (principal != null) ? principal.getUsername() : null;
         BlogDetailsResponse blogResponse = blogService.create(dto, username);
+        LOG.trace("Exiting create with response: {}", blogResponse);
         return new ResponseEntity<>(blogResponse, HttpStatus.CREATED);
     }
 
@@ -166,8 +181,9 @@ public class BlogController {
             @Parameter(description = "The unique slug of the blog post") @PathVariable String slug,
             @Valid @RequestBody CreateCommentRequest dto,
             @AuthenticationPrincipal CustomUserDetails principal) {
-
+        LOG.trace("Entering addComment with slug: {}, dto: {}, principal: {}", slug, dto, principal != null ? principal.getUsername() : null);
         CommentResponse comment = commentService.addComment(slug, dto, principal.getUsername());
+        LOG.trace("Exiting addComment with response: {}", comment);
         return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }
 
@@ -181,7 +197,9 @@ public class BlogController {
     @DeleteMapping(path = "/api/v1/blogs/hard-delete")
     public ResponseEntity<GenericResponse> hardDelete(
             @Parameter(description = "List of UUIDs of blogs to hard delete") @RequestBody List<UUID> uuids) {
+        LOG.trace("Entering hardDelete with uuids: {}", uuids);
         GenericResponse gr = blogService.hardDelete(uuids);
+        LOG.trace("Exiting hardDelete with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
@@ -197,7 +215,9 @@ public class BlogController {
             @Parameter(description = "The unique slug of the blog post") @PathVariable String slug,
             @RequestBody AddReactionRequest dto,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering like with slug: {}, dto: {}, principal: {}", slug, dto, principal != null ? principal.getUsername() : null);
         GenericResponse gr = blogService.like(slug, dto, principal);
+        LOG.trace("Exiting like with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 

@@ -49,14 +49,18 @@ public class RoleServiceImpl implements RoleService {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PagedResponse<RoleResponse> getAll(PaginationRequestParams paginationRequestParams,
                                               RoleSpecificationParams roleSpecificationParams) {
-
+        LOG.trace("Entering getAll with paginationRequestParams: {}, roleSpecificationParams: {}", paginationRequestParams, roleSpecificationParams);
         PagedRequest defaultsIfAnyInvalid = PagedRequest.initWithDefaultsIfAnyInvalid(paginationRequestParams);
         Pageable pageable = PagedRequest.getJPAPageRequest(defaultsIfAnyInvalid);
         Specification<Role> roleSpecifications = RoleSpecification.handleSpecs(roleSpecificationParams);
+        
+        LOG.trace("Fetching roles from repository with specifications");
         Page<Role> roles = roleRepository.findAll(roleSpecifications, pageable);
+        LOG.trace("Fetched {} roles", roles.getNumberOfElements());
 
         LOG.debug("Fetching all roles");
-        return new PagedResponse<>(
+        LOG.trace("Mapping Role entities to response DTOs");
+        PagedResponse<RoleResponse> response = new PagedResponse<>(
                 roles.stream().map(roleMapper::fromEntityToResponse).toList(),
                 roles.getNumber() + 1,
                 roles.getNumberOfElements(),
@@ -65,13 +69,20 @@ public class RoleServiceImpl implements RoleService {
                 roles.isEmpty(),
                 roles.hasNext()
         );
+        LOG.trace("Exiting getAll with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public RoleResponse getByName(String name) {
+        LOG.trace("Entering getByName with name: {}", name);
         Role role = findRoleOrThrow(name);
-        return roleMapper.fromEntityToResponse(role);
+        
+        LOG.trace("Mapping Role entity to response DTO");
+        RoleResponse response = roleMapper.fromEntityToResponse(role);
+        LOG.trace("Exiting getByName with response: {}", response);
+        return response;
     }
 
 
@@ -79,12 +90,14 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public RoleResponse create(CreateRoleRequest dto) {
+        LOG.trace("Entering create with dto: {}", dto);
         LOG.info("Attempting to create Role \"{}\"", dto.name());
 
         // normalized form makes the role name uppercase and adds prefix ROLE_
         // e.g. author -> ROLE_AUTHOR
         String normalizeRoleName = normalizeRoleName(dto.name());
 
+        LOG.trace("Checking if role already exists in repository with name: {}", normalizeRoleName);
         boolean roleExists = roleRepository.existsByNameIgnoreCase(normalizeRoleName);
         if (roleExists) {
             String roleDoesExist = messageResolver.getMessage("entity.already-exists", "Role", normalizeRoleName);
@@ -93,18 +106,26 @@ public class RoleServiceImpl implements RoleService {
         }
 
         CreateRoleRequest normalized = new CreateRoleRequest(normalizeRoleName, dto.roleType());
+        LOG.trace("Mapping normalized CreateRoleRequest DTO to Role entity");
         Role role = roleMapper.fromCreateRequestToEntity(normalized);
         role.setRoleType(RoleType.CUSTOM);
+        
+        LOG.trace("Saving new role to repository");
         Role saved = roleRepository.save(role);
 
         LOG.info("Role \"{}\" created", saved.getName());
-        return roleMapper.fromEntityToResponse(saved);
+        
+        LOG.trace("Mapping saved Role entity to response DTO");
+        RoleResponse response = roleMapper.fromEntityToResponse(saved);
+        LOG.trace("Exiting create with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse deleteOne(String name) {
+        LOG.trace("Entering deleteOne with name: {}", name);
         LOG.info("Attempting to delete Role \"{}\"", name);
 
         Role role = findRoleOrThrow(name);
@@ -112,10 +133,13 @@ public class RoleServiceImpl implements RoleService {
             String deleteNotAllowedMsg = messageResolver.getMessage("role.system.delete.not-allowed", name);
             throw new IllegalArgumentException(deleteNotAllowedMsg);
         }
+        
+        LOG.trace("Deleting role from repository: {}", role.getName());
         roleRepository.delete(role);
 
         String deleteMsg = messageResolver.getMessage("entity.delete.success", "1", "Role");
         LOG.info(deleteMsg);
+        LOG.trace("Exiting deleteOne with message: {}", deleteMsg);
         return new GenericResponse(deleteMsg);
     }
 
@@ -123,6 +147,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse deleteAllIn(DeleteRoleRequest deleteRoleRequest) {
+        LOG.trace("Entering deleteAllIn with deleteRoleRequest: {}", deleteRoleRequest);
         Set<String> normalized = new HashSet<>();
         for (String name : deleteRoleRequest.roles()) {
             boolean isSystemRole = name.equals(Constants.ADMIN_ROLE_NAME)
@@ -143,10 +168,13 @@ public class RoleServiceImpl implements RoleService {
         }
 
         LOG.debug("Attempting to delete Roles {}", normalized.toString());
+        
+        LOG.trace("Deleting multiple roles from repository: {}", normalized);
         long deletedCount = roleRepository.deleteAllIn(normalized);
 
         String deleteMsg = messageResolver.getMessage("entity.delete.success", String.valueOf(deletedCount), "Roles");
         LOG.info(deleteMsg);
+        LOG.trace("Exiting deleteAllIn with message: {}", deleteMsg);
         return new GenericResponse(deleteMsg);
     }
 

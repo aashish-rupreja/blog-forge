@@ -59,11 +59,17 @@ public class UserServiceImpl implements UserService {
     @Override
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PagedResponse<UserSummaryResponse> getAllUserSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams) {
+        LOG.trace("Entering getAllUserSummary with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
         Specification<User> userSpec = UserSpecification.handleSpecs(specParams);
+        
+        LOG.trace("Fetching user summaries from repository with specs");
         Page<User> users = userRepository.findAll(userSpec, jpaPageable);
-        return new PagedResponse<>(
+        LOG.trace("Fetched {} user summaries", users.getNumberOfElements());
+
+        LOG.trace("Mapping User entities to summary response DTOs");
+        PagedResponse<UserSummaryResponse> response = new PagedResponse<>(
                 users.getContent().stream().map(userMapper::fromEntityToSummaryResponse).toList(),
                 users.getNumber() + 1,
                 users.getNumberOfElements(),
@@ -72,20 +78,29 @@ public class UserServiceImpl implements UserService {
                 users.isEmpty(),
                 users.hasNext()
         );
+        LOG.trace("Exiting getAllUserSummary with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public UserProfileResponse getUserProfile(String username) {
+        LOG.trace("Entering getUserProfile with username: {}", username);
         User user = getUserOrThrow(username);
-        return userMapper.fromEntityToUserProfileResponse(user);
+        
+        LOG.trace("Mapping User entity to profile response DTO");
+        UserProfileResponse response = userMapper.fromEntityToUserProfileResponse(user);
+        LOG.trace("Exiting getUserProfile with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     public UserProfileResponse create(CreateUserRequest dto) {
+        LOG.trace("Entering create with dto: {}", dto);
         LOG.info("Attempting to register user \"{}\"", dto.username());
 
+        LOG.trace("Checking if username exists in repository: {}", dto.username());
         boolean isExistsUsername = userRepository.existsByUsernameIgnoreCase(dto.username());
         if (isExistsUsername) {
             String alreadyExists = messageResolver.getMessage("entity.already-exists", "User with username", dto.username());
@@ -93,6 +108,7 @@ public class UserServiceImpl implements UserService {
             throw new EntityExistsException(alreadyExists);
         }
 
+        LOG.trace("Checking if email exists in repository: {}", dto.email());
         boolean isExistsEmail = userRepository.existsByEmailIgnoreCase(dto.email());
         if (isExistsEmail) {
             String alreadyExists = messageResolver.getMessage("entity.already-exists", "User with email", dto.email());
@@ -100,8 +116,10 @@ public class UserServiceImpl implements UserService {
             throw new EntityExistsException(alreadyExists);
         }
 
+        LOG.trace("Mapping CreateUserRequest DTO to User entity");
         User user = userMapper.fromCreateRequestToEntity(dto);
 
+        LOG.trace("Finding role by name: {}", Constants.USER_ROLE_NAME);
         Role userRole = roleRepository.findByNameIgnoreCase(Constants.USER_ROLE_NAME)
                 .orElseThrow(() -> {
                     String notFoundMessage = messageResolver.getMessage("entity.not-found", "Role", Constants.USER_ROLE_NAME);
@@ -110,16 +128,23 @@ public class UserServiceImpl implements UserService {
                 });
         user.setRoles(Set.of(userRole));
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        
+        LOG.trace("Saving new user to repository");
         User saved = userRepository.save(user);
 
         LOG.info("User \"{}\" created", saved.getUsername());
-        return userMapper.fromEntityToUserProfileResponse(saved);
+        
+        LOG.trace("Mapping saved User entity to profile response DTO");
+        UserProfileResponse response = userMapper.fromEntityToUserProfileResponse(saved);
+        LOG.trace("Exiting create with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public UserProfileResponse partialUpdate(UpdateUserRequest dto, String authenticatedUsername) {
+        LOG.trace("Entering partialUpdate with dto: {}, authenticatedUsername: {}", dto, authenticatedUsername);
         LOG.info("Attempting to update User \"{}\"", authenticatedUsername);
 
         User toUpdate = getUserOrThrow(authenticatedUsername);
@@ -140,15 +165,21 @@ public class UserServiceImpl implements UserService {
             toUpdate.setBio(dto.bio());
         }
 
+        LOG.trace("Saving partially updated user to repository");
         User saved = userRepository.save(toUpdate);
         LOG.info("User \"{}\" updated", saved.getUsername());
-        return userMapper.fromEntityToUserProfileResponse(saved);
+        
+        LOG.trace("Mapping updated User entity to profile response DTO");
+        UserProfileResponse response = userMapper.fromEntityToUserProfileResponse(saved);
+        LOG.trace("Exiting partialUpdate with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public GenericResponse changePassword(ChangePasswordRequest dto, String authenticatedUsername) {
+        LOG.trace("Entering changePassword with dto: {}, authenticatedUsername: {}", dto, authenticatedUsername);
         LOG.info("Attempting password update for User \"{}\"", authenticatedUsername);
 
         User user = getUserOrThrow(authenticatedUsername);
@@ -166,9 +197,12 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        
+        LOG.trace("Saving updated password for user to repository");
         userRepository.save(user);
         String pwChanged = messageResolver.getMessage("user.password.changed");
         LOG.info(pwChanged);
+        LOG.trace("Exiting changePassword with message: {}", pwChanged);
         return new GenericResponse(pwChanged);
     }
 
@@ -176,11 +210,15 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public void assignAuthorRole(UUID userId) {
+        LOG.trace("Entering assignAuthorRole with userId: {}", userId);
+        
+        LOG.trace("Finding user by id: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageResolver.getMessage("entity.not-found", "User", userId)
                 ));
 
+        LOG.trace("Finding role by name: {}", Constants.AUTHOR_ROLE_NAME);
         Role authorRole = roleRepository.findByNameIgnoreCase(Constants.AUTHOR_ROLE_NAME)
                 .orElseThrow(() -> {
                     String notFoundMessage = messageResolver.getMessage("entity.not-found", "Role", Constants.AUTHOR_ROLE_NAME);
@@ -191,29 +229,39 @@ public class UserServiceImpl implements UserService {
         Set<Role> roles = user.getRoles();
         roles.add(authorRole);
         user.setRoles(roles);
+        
+        LOG.trace("Saving user with assigned author role to repository");
         userRepository.save(user);
         LOG.info("Granted {} to {}", Constants.AUTHOR_ROLE_NAME, user.getUsername());
+        LOG.trace("Exiting assignAuthorRole");
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public GenericResponse deleteProfile(String authenticatedUsername) {
+        LOG.trace("Entering deleteProfile with authenticatedUsername: {}", authenticatedUsername);
         LOG.info("Attempting profile deletion for User \"{}\"", authenticatedUsername);
         User user = getUserOrThrow(authenticatedUsername);
         try {
+            LOG.trace("Attempting hard delete from repository for user: {}", authenticatedUsername);
             userRepository.delete(user);
             userRepository.flush();
+            LOG.trace("Exiting deleteProfile with hard delete success");
             return new GenericResponse("Profile deleted successfully.");
         } catch (Exception ex) {
             // Fallback to soft delete/anonymization if database constraints prevent hard deletion
+            LOG.trace("Hard delete failed due to constraints; performing soft delete fallback for user: {}", authenticatedUsername);
             user.setStatus(UserStatus.DELETION_SCHEDULED);
             user.setBio("Deleted account");
             user.setProfilePicLink(null);
             user.setFirstName("Deleted");
             user.setLastName("User");
             user.setPasswordHash("");
+            
+            LOG.trace("Saving soft-deleted user to repository");
             userRepository.save(user);
+            LOG.trace("Exiting deleteProfile with soft delete schedule success");
             return new GenericResponse("Profile scheduled for deletion successfully.");
         }
     }

@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Tags", description = "Endpoints for managing blog tags")
 @RestController
 public class TagController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TagController.class);
 
     private final TagService tagService;
 
@@ -39,7 +43,9 @@ public class TagController {
             @ModelAttribute PaginationRequestParams reqParams,
             @Parameter(description = "Filter tags by name prefix or containing term") @RequestParam(required = false) String name
             ) {
+        LOG.trace("Entering getAll with reqParams: {}, name: {}", reqParams, name);
         PagedResponse<TagResponse> response = tagService.getAll(reqParams, name);
+        LOG.trace("Exiting getAll with response count: {}", response.getContent() != null ? response.getContent().size() : 0);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -51,7 +57,9 @@ public class TagController {
     @GetMapping("/api/v1/tags/{name}")
     public ResponseEntity<TagResponse> getByName(
             @Parameter(description = "The unique name of the tag") @PathVariable String name) {
+        LOG.trace("Entering getByName with name: {}", name);
         TagResponse tr = tagService.getByName(name);
+        LOG.trace("Exiting getByName with response: {}", tr);
         return new ResponseEntity<>(tr, HttpStatus.OK);
     }
 
@@ -65,7 +73,9 @@ public class TagController {
     })
     @PostMapping("/api/v1/tags")
     public ResponseEntity<TagResponse> create(@Valid @RequestBody CreateTagRequest tagRequest) {
+        LOG.trace("Entering create with tagRequest: {}", tagRequest);
         TagResponse tr = tagService.create(tagRequest);
+        LOG.trace("Exiting create with response: {}", tr);
         return new ResponseEntity<>(tr, HttpStatus.CREATED);
     }
 
@@ -78,7 +88,9 @@ public class TagController {
     })
     @DeleteMapping(path = "/api/v1/tags")
     public ResponseEntity<GenericResponse> delete(@Valid @RequestBody DeleteTagRequest dto) {
+        LOG.trace("Entering delete with dto: {}", dto);
         GenericResponse gr = tagService.delete(dto);
+        LOG.trace("Exiting delete with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }

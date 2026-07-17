@@ -74,12 +74,17 @@ public class BlogServiceImpl implements BlogService {
 
     @PreAuthorize("permitAll()")
     public PagedResponse<BlogSummaryResponse> getAllSummary(PaginationRequestParams requestParams, BlogSpecificationParams specParams) {
+        LOG.trace("Entering getAllSummary with requestParams: {}, specParams: {}", requestParams, specParams);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(requestParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
         Specification<Blog> spec = BlogSpecification.handleSpecs(specParams);
 
+        LOG.trace("Fetching blog summaries from repository with spec: {}", specParams);
         Page<Blog> blogSummaries = blogRepository.findAll(spec, jpaPageable);
-        return new PagedResponse<>(
+        LOG.trace("Fetched {} blog summaries", blogSummaries.getNumberOfElements());
+
+        LOG.trace("Mapping Blog entities to summary response DTOs");
+        PagedResponse<BlogSummaryResponse> response = new PagedResponse<>(
                 blogSummaries.stream().map(blogMapper::fromEntityToSummaryResponse).toList(),
                 blogSummaries.getNumber() + 1,
                 blogSummaries.getSize(),
@@ -88,28 +93,40 @@ public class BlogServiceImpl implements BlogService {
                 blogSummaries.isEmpty(),
                 blogSummaries.hasNext()
         );
+        LOG.trace("Exiting getAllSummary with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
     @PreAuthorize("permitAll()")
     public BlogDetailsResponse getBlogDetails(String slug) {
+        LOG.trace("Entering getBlogDetails with slug: {}", slug);
+        LOG.trace("Finding blog by slug: {}", slug);
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
                         "entity.not-found",
                         "Blog", slug
                 )));
 
-        return blogMapper.fromEntityToDetailsResponse(b);
+        LOG.trace("Mapping Blog entity to details response DTO");
+        BlogDetailsResponse response = blogMapper.fromEntityToDetailsResponse(b);
+        LOG.trace("Exiting getBlogDetails with response: {}", response);
+        return response;
     }
 
     @Override
     @PreAuthorize("permitAll()")
     public PagedResponse<CommentResponse> getBlogComments(String slug, PaginationRequestParams requestParams) {
+        LOG.trace("Entering getBlogComments with slug: {}, requestParams: {}", slug, requestParams);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(requestParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
+        
+        LOG.trace("Fetching comments for blog slug: {}", slug);
         Page<Comment> comments = commentRepository.findByBlog_Slug(slug, jpaPageable);
+        LOG.trace("Fetched {} comments", comments.getNumberOfElements());
 
-        return new PagedResponse<>(
+        LOG.trace("Mapping Comment entities to response DTOs");
+        PagedResponse<CommentResponse> response = new PagedResponse<>(
                 comments.stream().map(commentMapper::fromEntityToResponse).toList(),
                 comments.getNumber() + 1,
                 comments.getSize(),
@@ -118,6 +135,8 @@ public class BlogServiceImpl implements BlogService {
                 comments.isEmpty(),
                 comments.hasNext()
         );
+        LOG.trace("Exiting getBlogComments with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
@@ -127,7 +146,9 @@ public class BlogServiceImpl implements BlogService {
             String slug,
             UpdateBlogRequest updateBlogRequest,
             CustomUserDetails principal) {
+        LOG.trace("Entering partialUpdate with slug: {}, updateBlogRequest: {}, principal: {}", slug, updateBlogRequest, principal != null ? principal.getUsername() : null);
 
+        LOG.trace("Finding blog for partial update by slug: {}", slug);
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> {
                     String blogNotFound = messageResolver.getMessage(
@@ -171,14 +192,21 @@ public class BlogServiceImpl implements BlogService {
             b.setTags(updatedTags);
         }
 
+        LOG.trace("Saving partially updated blog to repository");
         Blog saved = blogRepository.save(b);
-        return blogMapper.fromEntityToDetailsResponse(saved);
+        
+        LOG.trace("Mapping updated Blog entity to details response DTO");
+        BlogDetailsResponse response = blogMapper.fromEntityToDetailsResponse(saved);
+        LOG.trace("Exiting partialUpdate with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_AUTHOR', 'ROLE_ADMIN')")
     public GenericResponse delete(String slug) {
+        LOG.trace("Entering delete with slug: {}", slug);
+        LOG.trace("Finding blog for delete by slug: {}", slug);
         Blog b = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> new EntityNotFoundException(messageResolver.getMessage(
                         "entity.not-found",
@@ -191,8 +219,11 @@ public class BlogServiceImpl implements BlogService {
             throw new IllegalBlogTransitionException(illegalTransitionMsg);
         }
         b.setStatus(BlogStatus.DELETED);
+        
+        LOG.trace("Saving soft-deleted blog to repository");
         blogRepository.save(b);
         String deleteMessage = messageResolver.getMessage("blog.status.deleted", b.getTitle());
+        LOG.trace("Exiting delete with message: {}", deleteMessage);
         return new GenericResponse(deleteMessage);
     }
 
@@ -201,12 +232,16 @@ public class BlogServiceImpl implements BlogService {
     public PagedResponse<BlogSummaryResponse> getMyBlogs(
             PaginationRequestParams reqParams,
             String currentAuthenticatedUsername) {
-
+        LOG.trace("Entering getMyBlogs with reqParams: {}, currentAuthenticatedUsername: {}", reqParams, currentAuthenticatedUsername);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
+        
+        LOG.trace("Fetching own blogs from repository for user: {}", currentAuthenticatedUsername);
         Page<Blog> myBlogs = blogRepository.findAllByAuthor_UsernameIgnoreCase(currentAuthenticatedUsername, jpaPageable);
+        LOG.trace("Fetched {} own blogs", myBlogs.getNumberOfElements());
 
-        return new PagedResponse<>(
+        LOG.trace("Mapping own Blog entities to summary response DTOs");
+        PagedResponse<BlogSummaryResponse> response = new PagedResponse<>(
                 myBlogs.stream().map(blogMapper::fromEntityToSummaryResponse).toList(),
                 myBlogs.getNumber() + 1,
                 myBlogs.getSize(),
@@ -215,14 +250,21 @@ public class BlogServiceImpl implements BlogService {
                 myBlogs.isEmpty(),
                 myBlogs.hasNext()
         );
+        LOG.trace("Exiting getMyBlogs with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_AUTHOR')")
     public BlogDetailsResponse create(CreateBlogRequest dto, String currentAuthenticatedUsername) {
+        LOG.trace("Entering create with dto: {}, currentAuthenticatedUsername: {}", dto, currentAuthenticatedUsername);
         LOG.info("User {} attempting to create a new blog", currentAuthenticatedUsername);
+        
+        LOG.trace("Mapping create request DTO to Blog entity");
         Blog b = blogMapper.fromCreateRequestToEntity(dto);
+        
+        LOG.trace("Finding author user by username: {}", currentAuthenticatedUsername);
         User author = userRepository.findByUsernameAndRoles_Name(currentAuthenticatedUsername, Constants.AUTHOR_ROLE_NAME)
                 .orElseThrow(() -> {
                     String userNotFound = messageResolver.getMessage("entity.not-found", "Author", currentAuthenticatedUsername);
@@ -245,16 +287,24 @@ public class BlogServiceImpl implements BlogService {
 
         if (b.getStatus() == BlogStatus.PUBLISHED) b.setPublishedAt(Instant.now());
 
+        LOG.trace("Saving new blog to repository");
         Blog saved = blogRepository.save(b);
         LOG.info("Blog {} successfully created", b.getSlug());
-        return blogMapper.fromEntityToDetailsResponse(saved);
+        
+        LOG.trace("Mapping saved Blog entity to details response DTO");
+        BlogDetailsResponse response = blogMapper.fromEntityToDetailsResponse(saved);
+        LOG.trace("Exiting create with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse hardDelete(List<UUID> uuids) {
+        LOG.trace("Entering hardDelete with uuids: {}", uuids);
+        LOG.trace("Deleting blogs from repository by uuids: {}", uuids);
         blogRepository.deleteAllById(uuids);
+        LOG.trace("Exiting hardDelete");
         return new GenericResponse("Blogs Deleted!");
     }
 
@@ -262,6 +312,8 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public GenericResponse like(String slug, AddReactionRequest dto, CustomUserDetails principal) {
+        LOG.trace("Entering like with slug: {}, dto: {}, principal: {}", slug, dto, principal != null ? principal.getUsername() : null);
+        LOG.trace("Finding blog for reaction by slug: {}", slug);
         Blog blog = blogRepository.findBySlugIgnoreCase(slug)
                 .orElseThrow(() -> {
                     String notFound = messageResolver.getMessage("entity.not-found", "Blog", slug);
@@ -269,14 +321,17 @@ public class BlogServiceImpl implements BlogService {
                     return new EntityNotFoundException(notFound);
                 });
 
+        LOG.trace("Finding existing reaction by user: {} and blog slug: {}", principal.getUsername(), slug);
         Optional<Reaction> check = reactionRepository.findByReactor_UsernameAndBlog_Slug(principal.getUsername(), slug);
         String reactionMsg = null;
         // if blog already has Like/Dislike and user reacts Like/Dislike again remove reaction
         if (check.isPresent()) {
             if (check.get().getReactionType() == dto.reactionType()) {
+                LOG.trace("Removing reaction: {}", check.get().getReactionType());
                 reactionRepository.delete(check.get());
                 reactionMsg = messageResolver.getMessage("blog.reaction.remove", dto.reactionType().toString(), slug);
             } else {
+                LOG.trace("Updating reaction from: {} to: {}", check.get().getReactionType(), dto.reactionType());
                 check.get().setReactionType(dto.reactionType());
                 reactionRepository.save(check.get());
                 reactionMsg = messageResolver.getMessage("blog.reaction.add", dto.reactionType().toString(), slug);
@@ -284,6 +339,7 @@ public class BlogServiceImpl implements BlogService {
         } else {
             Reaction reaction = new Reaction();
             reaction.setBlog(blog);
+            LOG.trace("Finding user entity by username: {}", principal.getUsername());
             User user = userRepository.findByUsernameIgnoreCase(principal.getUsername())
                     .orElseThrow(() -> {
                         String notFound = messageResolver.getMessage("entity.not-found", "User", principal.getUsername());
@@ -292,9 +348,12 @@ public class BlogServiceImpl implements BlogService {
                     });
             reaction.setReactor(user);
             reaction.setReactionType(dto.reactionType());
+            
+            LOG.trace("Saving new reaction to repository");
             reactionRepository.save(reaction);
             reactionMsg = messageResolver.getMessage("blog.reaction.add", dto.reactionType().toString(), slug);
         }
+        LOG.trace("Exiting like with message: {}", reactionMsg);
         return new GenericResponse(reactionMsg);
     }
 
