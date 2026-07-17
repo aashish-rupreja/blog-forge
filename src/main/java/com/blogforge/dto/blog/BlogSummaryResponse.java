@@ -17,6 +17,7 @@ public record BlogSummaryResponse(
         long dislikeCount,
         boolean commentsEnabled,
         long commentCount,
-        String authorProfilePicLink
+        String authorProfilePicLink,
+        com.blogforge.entity.BlogStatus blogStatus
 ) {
 }
