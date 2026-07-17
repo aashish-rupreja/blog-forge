@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Roles", description = "Endpoints for managing user roles (Admin only)")
 @RestController
 public class RoleController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RoleController.class);
 
     private final RoleService roleService;
 
@@ -42,7 +46,9 @@ public class RoleController {
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute RoleSpecificationParams specParams
             ) {
+        LOG.trace("Entering getAll with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedResponse<RoleResponse> roles = roleService.getAll(reqParams, specParams);
+        LOG.trace("Exiting getAll with response count: {}", roles.getContent() != null ? roles.getContent().size() : 0);
         return new ResponseEntity<>(roles, HttpStatus.OK);
     }
 
@@ -57,7 +63,9 @@ public class RoleController {
     @GetMapping(path = "/api/v1/roles/{name}")
     public ResponseEntity<RoleResponse> getByName(
             @Parameter(description = "The unique name of the role") @PathVariable String name) {
+        LOG.trace("Entering getByName with name: {}", name);
         RoleResponse rr = roleService.getByName(name);
+        LOG.trace("Exiting getByName with response: {}", rr);
         return new ResponseEntity<>(rr, HttpStatus.OK);
     }
 
@@ -72,7 +80,9 @@ public class RoleController {
     })
     @PostMapping(path = "/api/v1/roles")
     public ResponseEntity<RoleResponse> create(@Valid @RequestBody CreateRoleRequest dto) {
+        LOG.trace("Entering create with dto: {}", dto);
         RoleResponse rr = roleService.create(dto);
+        LOG.trace("Exiting create with response: {}", rr);
         return new ResponseEntity<>(rr, HttpStatus.CREATED);
     }
 
@@ -87,7 +97,9 @@ public class RoleController {
     @DeleteMapping(path = "/api/v1/roles/{name}")
     public ResponseEntity<GenericResponse> deleteOne(
             @Parameter(description = "The unique name of the role to delete") @PathVariable String name) {
+        LOG.trace("Entering deleteOne with name: {}", name);
         GenericResponse gr = roleService.deleteOne(name);
+        LOG.trace("Exiting deleteOne with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
@@ -101,7 +113,9 @@ public class RoleController {
     })
     @DeleteMapping(path = "/api/v1/roles")
     public ResponseEntity<GenericResponse> deleteAllIn(@Valid @RequestBody DeleteRoleRequest roles) {
+        LOG.trace("Entering deleteAllIn with roles: {}", roles);
         GenericResponse gr = roleService.deleteAllIn(roles);
+        LOG.trace("Exiting deleteAllIn with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }

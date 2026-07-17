@@ -86,7 +86,7 @@ class CommentServiceImplAuthorizationTest {
     @WithMockUser(authorities = "ROLE_USER")
     void addComment_ShouldBeAccessible_ByUser() {
         // commentMapper returns null by default → NPE inside method, not auth denial
-        try { commentService.addComment("slug", mock(CreateCommentRequest.class), mock(User.class)); }
+        try { commentService.addComment("slug", mock(CreateCommentRequest.class), "user1"); }
         catch (org.springframework.security.authorization.AuthorizationDeniedException e) {
             throw new AssertionError("Should not be access-denied for ROLE_USER", e);
         } catch (Exception ignored) { /* expected — no deep mocking */ }
@@ -95,7 +95,7 @@ class CommentServiceImplAuthorizationTest {
     @Test
     void addComment_ShouldBeDenied_WhenUnauthenticated() {
         assertThrows(org.springframework.security.authentication.AuthenticationCredentialsNotFoundException.class,
-                () -> commentService.addComment("slug", mock(CreateCommentRequest.class), mock(User.class)));
+                () -> commentService.addComment("slug", mock(CreateCommentRequest.class), "user1"));
     }
 
     // ── partialUpdate — ROLE_USER required ────────────────────────────────────

@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Users", description = "Endpoints for user registration, profile management, and account operations")
 @RestController
 public class UserController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
 
@@ -41,7 +45,9 @@ public class UserController {
             @ModelAttribute PaginationRequestParams reqParams,
             @ModelAttribute UserSpecificationParams specParams
     ) {
+        LOG.trace("Entering getAllUserSummary with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedResponse<UserSummaryResponse> usr = userService.getAllUserSummary(reqParams, specParams);
+        LOG.trace("Exiting getAllUserSummary with response count: {}", usr.getContent() != null ? usr.getContent().size() : 0);
         return new ResponseEntity<>(usr, HttpStatus.OK);
     }
 
@@ -53,7 +59,9 @@ public class UserController {
     @GetMapping(path = "/api/v1/users/{username}")
     public ResponseEntity<UserProfileResponse> getUserProfile(
             @Parameter(description = "The username of the user") @PathVariable String username) {
+        LOG.trace("Entering getUserProfile with username: {}", username);
         UserProfileResponse upr = userService.getUserProfile(username);
+        LOG.trace("Exiting getUserProfile with response: {}", upr);
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 
@@ -65,7 +73,9 @@ public class UserController {
     })
     @PostMapping(path = "/api/v1/users")
     public ResponseEntity<UserProfileResponse> create(@Valid @RequestBody CreateUserRequest dto) {
+        LOG.trace("Entering create with dto: {}", dto);
         UserProfileResponse upr = userService.create(dto);
+        LOG.trace("Exiting create with response: {}", upr);
         return new ResponseEntity<>(upr, HttpStatus.CREATED);
     }
 
@@ -80,7 +90,9 @@ public class UserController {
     public ResponseEntity<UserProfileResponse> partialUpdate(
             @Valid @RequestBody UpdateUserRequest dto,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering partialUpdate with dto: {}, principal: {}", dto, principal != null ? principal.getUsername() : null);
         UserProfileResponse upr = userService.partialUpdate(dto, principal.getUsername());
+        LOG.trace("Exiting partialUpdate with response: {}", upr);
         return new ResponseEntity<>(upr, HttpStatus.OK);
     }
 
@@ -95,7 +107,9 @@ public class UserController {
     public ResponseEntity<GenericResponse> changePassword(
             @Valid @RequestBody ChangePasswordRequest dto,
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering changePassword with dto: {}, principal: {}", dto, principal != null ? principal.getUsername() : null);
         GenericResponse gr = userService.changePassword(dto, principal.getUsername());
+        LOG.trace("Exiting changePassword with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 
@@ -107,9 +121,11 @@ public class UserController {
     })
     @GetMapping(path = "/api/v1/users/me")
     public ResponseEntity<UserProfileResponse> getMyProfile(@AuthenticationPrincipal UserDetails principal) {
+        LOG.trace("Entering getMyProfile with principal: {}", principal != null ? principal.getUsername() : null);
         String currentUserUsername = (principal != null)
                 ? principal.getUsername() : null;
         UserProfileResponse myProfile = userService.getUserProfile(currentUserUsername);
+        LOG.trace("Exiting getMyProfile with response: {}", myProfile);
         return new ResponseEntity<>(myProfile, HttpStatus.OK);
     }
 
@@ -122,7 +138,9 @@ public class UserController {
     @DeleteMapping(path = "/api/v1/users/me")
     public ResponseEntity<GenericResponse> deleteProfile(
             @AuthenticationPrincipal CustomUserDetails principal) {
+        LOG.trace("Entering deleteProfile with principal: {}", principal != null ? principal.getUsername() : null);
         GenericResponse gr = userService.deleteProfile(principal.getUsername());
+        LOG.trace("Exiting deleteProfile with response: {}", gr);
         return new ResponseEntity<>(gr, HttpStatus.OK);
     }
 }
