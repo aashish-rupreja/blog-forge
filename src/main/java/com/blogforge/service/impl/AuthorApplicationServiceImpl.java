@@ -61,12 +61,17 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
     @Override
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PagedResponse<AuthorApplicationResponse> getAll(PaginationRequestParams reqParams, AuthorApplicationSpecificationParams specParams) {
+        LOG.trace("Entering getAll with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
         Specification<AuthorApplication> spec = AuthorApplicationSpecification.handleSpecs(specParams);
 
+        LOG.trace("Fetching author applications from repository with spec: {}", specParams);
         Page<AuthorApplication> authorApplications = authorApplicationRepository.findAll(spec, jpaPageable);
-        return new PagedResponse<>(
+        LOG.trace("Fetched {} author applications", authorApplications.getNumberOfElements());
+
+        LOG.trace("Mapping AuthorApplication entities to response DTOs");
+        PagedResponse<AuthorApplicationResponse> response = new PagedResponse<>(
                 authorApplications.stream().map(authorApplicationMapper::fromEntityToResponse).toList(),
                 authorApplications.getNumber() + 1,
                 authorApplications.getSize(),
@@ -75,6 +80,8 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
                 authorApplications.isEmpty(),
                 authorApplications.hasNext()
         );
+        LOG.trace("Exiting getAll with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
@@ -83,15 +90,18 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
             PaginationRequestParams reqParams,
             MyAuthorApplicationsRequest specParams,
             String currentAuthenticatedUsername) {
-
+        LOG.trace("Entering getMyAuthorApplications with reqParams: {}, specParams: {}, currentAuthenticatedUsername: {}", reqParams, specParams, currentAuthenticatedUsername);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
 
         Specification<AuthorApplication> spec = AuthorApplicationSpecification.handleMyApplicationSpecs(specParams, currentAuthenticatedUsername);
 
+        LOG.trace("Fetching own author applications from repository for user: {}", currentAuthenticatedUsername);
         Page<AuthorApplication> myAuthorApplications = authorApplicationRepository.findAll(spec, jpaPageable);
+        LOG.trace("Fetched {} own author applications", myAuthorApplications.getNumberOfElements());
 
-        return new PagedResponse<>(
+        LOG.trace("Mapping own AuthorApplication entities to response DTOs");
+        PagedResponse<AuthorApplicationResponse> response = new PagedResponse<>(
                 myAuthorApplications.stream().map(authorApplicationMapper::fromEntityToResponse).toList(),
                 myAuthorApplications.getNumber() + 1,
                 myAuthorApplications.getSize(),
@@ -100,13 +110,17 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
                 myAuthorApplications.isEmpty(),
                 myAuthorApplications.hasNext()
         );
+        LOG.trace("Exiting getMyAuthorApplications with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public AuthorApplicationResponse create(CreateAuthorApplicationRequest dto, String currentAuthenticatedUsername) {
+        LOG.trace("Entering create with dto: {}, currentAuthenticatedUsername: {}", dto, currentAuthenticatedUsername);
 
+        LOG.trace("Finding existing application by applicant username: {}", currentAuthenticatedUsername);
         Optional<AuthorApplication> check =
                 authorApplicationRepository.findByApplicant_Username(currentAuthenticatedUsername);
 
@@ -119,7 +133,10 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
             }
         }
 
+        LOG.trace("Mapping create request DTO to AuthorApplication entity");
         AuthorApplication newApplication = authorApplicationMapper.fromCreateRequestToEntity(dto);
+        
+        LOG.trace("Finding applicant user entity by username: {}", currentAuthenticatedUsername);
         User applicant = userRepository.findByUsernameIgnoreCase(currentAuthenticatedUsername)
                 .orElseThrow(() -> {
                     String applicationNotFound = messageResolver.getMessage(
@@ -130,6 +147,7 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
                 });
         newApplication.setApplicant(applicant);
 
+        LOG.trace("Finding reviewer user entity by username: {}", Constants.DEFAULT_ADMIN);
         User reviewer = userRepository.findByUsernameIgnoreCase(Constants.DEFAULT_ADMIN)
                 .orElseThrow(() -> {
                     String applicationNotFound = messageResolver.getMessage(
@@ -140,14 +158,21 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
                 });
         newApplication.setApplicationReviewer(reviewer);
 
+        LOG.trace("Saving new author application to repository");
         AuthorApplication saved = authorApplicationRepository.save(newApplication);
         LOG.info("New application created for {}", saved.getApplicant().getUsername());
-        return authorApplicationMapper.fromEntityToResponse(saved);
+        
+        LOG.trace("Mapping saved AuthorApplication entity to response DTO");
+        AuthorApplicationResponse response = authorApplicationMapper.fromEntityToResponse(saved);
+        LOG.trace("Exiting create with response: {}", response);
+        return response;
     }
 
     @Override
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public AuthorApplicationResponse getSingleApplication(UUID id) {
+        LOG.trace("Entering getSingleApplication with id: {}", id);
+        LOG.trace("Finding author application by id: {}", id);
         AuthorApplication aa = authorApplicationRepository.findById(id)
                 .orElseThrow(() -> {
                     String applicationNotFound = messageResolver.getMessage(
@@ -157,13 +182,18 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
                     return new EntityNotFoundException(applicationNotFound);
                 });
 
-        return authorApplicationMapper.fromEntityToResponse(aa);
+        LOG.trace("Mapping AuthorApplication entity to response DTO");
+        AuthorApplicationResponse response = authorApplicationMapper.fromEntityToResponse(aa);
+        LOG.trace("Exiting getSingleApplication with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public AuthorApplicationResponse approveApplication(UUID id, UpdateAuthorApplicationRequest dto) {
+        LOG.trace("Entering approveApplication with id: {}, dto: {}", id, dto);
+        LOG.trace("Finding author application for approval by id: {}", id);
         AuthorApplication aa = authorApplicationRepository.findById(id)
                 .orElseThrow(() -> {
                     String applicationNotFound = messageResolver.getMessage(
@@ -181,16 +211,26 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
 
         aa.setStatus(AuthorApplicationStatus.APPROVED);
         aa.setReviewerRemarks(dto.reviewerRemarks());
+        
+        LOG.trace("Assigning author role to applicant user uuid: {}", aa.getApplicant().getUuid());
         userService.assignAuthorRole(aa.getApplicant().getUuid());
+        
+        LOG.trace("Saving updated author application to repository");
         AuthorApplication saved = authorApplicationRepository.save(aa);
         LOG.info("Author application {} for {}", AuthorApplicationStatus.APPROVED.toString(), aa.getApplicant().getUsername());
-        return authorApplicationMapper.fromEntityToResponse(saved);
+        
+        LOG.trace("Mapping approved AuthorApplication entity to response DTO");
+        AuthorApplicationResponse response = authorApplicationMapper.fromEntityToResponse(saved);
+        LOG.trace("Exiting approveApplication with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public AuthorApplicationResponse rejectApplication(UUID id, UpdateAuthorApplicationRequest dto) {
+        LOG.trace("Entering rejectApplication with id: {}, dto: {}", id, dto);
+        LOG.trace("Finding author application for rejection by id: {}", id);
         AuthorApplication aa = authorApplicationRepository.findById(id)
                 .orElseThrow(() -> {
                     String applicationNotFound = messageResolver.getMessage(
@@ -208,9 +248,15 @@ public class AuthorApplicationServiceImpl implements AuthorApplicationService {
 
         aa.setStatus(AuthorApplicationStatus.REJECTED);
         aa.setReviewerRemarks(dto.reviewerRemarks());
+        
+        LOG.trace("Saving rejected author application to repository");
         AuthorApplication saved = authorApplicationRepository.save(aa);
         LOG.info("Author application {} for {}", AuthorApplicationStatus.REJECTED.toString(), aa.getApplicant().getUsername());
-        return authorApplicationMapper.fromEntityToResponse(saved);
+        
+        LOG.trace("Mapping rejected AuthorApplication entity to response DTO");
+        AuthorApplicationResponse response = authorApplicationMapper.fromEntityToResponse(saved);
+        LOG.trace("Exiting rejectApplication with response: {}", response);
+        return response;
     }
 
 

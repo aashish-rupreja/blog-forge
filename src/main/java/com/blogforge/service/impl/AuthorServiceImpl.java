@@ -46,14 +46,19 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public PagedResponse<UserSummaryResponse> getAllAuthorSummary(PaginationRequestParams reqParams, UserSpecificationParams specParams) {
+        LOG.trace("Entering getAllAuthorSummary with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
 
         Specification<User> spec = UserSpecification.handleSpecs(specParams);
         spec = spec.and(UserSpecification.hasRole(Constants.AUTHOR_ROLE_NAME));
 
+        LOG.trace("Fetching authors from repository with spec: {}", specParams);
         Page<User> authors = userRepository.findAll(spec, jpaPageable);
-        return new PagedResponse<>(
+        LOG.trace("Fetched {} authors", authors.getNumberOfElements());
+
+        LOG.trace("Mapping Author entities to summary response DTOs");
+        PagedResponse<UserSummaryResponse> response = new PagedResponse<>(
                 authors.stream().map(userMapper::fromEntityToSummaryResponse).toList(),
                 authors.getNumber() + 1,
                 authors.getNumberOfElements(),
@@ -62,10 +67,14 @@ public class AuthorServiceImpl implements AuthorService {
                 authors.isEmpty(),
                 authors.hasNext()
         );
+        LOG.trace("Exiting getAllAuthorSummary with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
     public AuthorProfileResponse getAuthorProfile(String username, String authenticatedPrincipalUsername) {
+        LOG.trace("Entering getAuthorProfile with username: {}, authenticatedPrincipalUsername: {}", username, authenticatedPrincipalUsername);
+        LOG.trace("Finding author by username: {}", username);
         User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
                 .orElseThrow(() -> {
                     String authorNotFound = messageResolver.getMessage("entity.not-found", "Author", username);
@@ -75,18 +84,24 @@ public class AuthorServiceImpl implements AuthorService {
 
         boolean isFollowing = false;
         if (authenticatedPrincipalUsername != null) {
+            LOG.trace("Checking if user {} follows {}", authenticatedPrincipalUsername, username);
             isFollowing = followRepository.existsByFollower_UsernameAndFollowing_Username(
                     authenticatedPrincipalUsername,
                     author.getUsername()
             );
         }
 
-        return userMapper.fromEntityToAuthorProfileResponse(author, isFollowing);
+        LOG.trace("Mapping Author entity to profile response DTO");
+        AuthorProfileResponse response = userMapper.fromEntityToAuthorProfileResponse(author, isFollowing);
+        LOG.trace("Exiting getAuthorProfile with response: {}", response);
+        return response;
     }
 
     @Override
     @PreAuthorize("hasAuthority('ROLE_AUTHOR')")
     public AuthorProfileResponse getMyProfile(String username) {
+        LOG.trace("Entering getMyProfile with username: {}", username);
+        LOG.trace("Finding author profile by username: {}", username);
         User author = userRepository.findByUsernameAndRoles_Name(username, Constants.AUTHOR_ROLE_NAME)
                 .orElseThrow(() -> {
                     String authorNotFound = messageResolver.getMessage("entity.not-found", "Author", username);
@@ -94,6 +109,9 @@ public class AuthorServiceImpl implements AuthorService {
                     return new EntityNotFoundException(authorNotFound);
                 });
 
-        return userMapper.fromEntityToAuthorProfileResponse(author, false);
+        LOG.trace("Mapping own Author entity to profile response DTO");
+        AuthorProfileResponse response = userMapper.fromEntityToAuthorProfileResponse(author, false);
+        LOG.trace("Exiting getMyProfile with response: {}", response);
+        return response;
     }
 }

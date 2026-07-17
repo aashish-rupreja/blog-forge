@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 public class BlogSpecification {
 
     public static Specification<Blog> titleContains(String providedTitle) {
-        System.out.println(providedTitle);
         return new Specification<Blog>() {
             @Override
             public @Nullable Predicate toPredicate(Root<Blog> blogTable, CriteriaQuery<?> query, CriteriaBuilder queryBuilder) {

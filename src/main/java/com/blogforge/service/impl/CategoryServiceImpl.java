@@ -46,11 +46,17 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public PagedResponse<CategoryResponse> getAll(PaginationRequestParams reqParams, CategorySpecificationParams specParams) {
+        LOG.trace("Entering getAll with reqParams: {}, specParams: {}", reqParams, specParams);
         PagedRequest pr = PagedRequest.initWithDefaultsIfAnyInvalid(reqParams);
         Pageable jpaPageable = PagedRequest.getJPAPageRequest(pr);
         Specification<Category> spec = CategorySpecification.handleSpecs(specParams);
+        
+        LOG.trace("Fetching categories from repository with spec: {}", specParams);
         Page<Category> categories = categoryRepository.findAll(spec, jpaPageable);
-        return new PagedResponse<>(
+        LOG.trace("Fetched {} categories", categories.getNumberOfElements());
+
+        LOG.trace("Mapping Category entities to response DTOs");
+        PagedResponse<CategoryResponse> response = new PagedResponse<>(
                 categories.stream().map(categoryMapper::fromEntityToResponse).toList(),
                 categories.getNumber(),
                 categories.getSize(),
@@ -59,10 +65,14 @@ public class CategoryServiceImpl implements CategoryService {
                 categories.isEmpty(),
                 categories.hasNext()
         );
+        LOG.trace("Exiting getAll with response count: {}", response.getContent().size());
+        return response;
     }
 
     @Override
     public CategoryResponse getByName(String categoryName) {
+        LOG.trace("Entering getByName with categoryName: {}", categoryName);
+        LOG.trace("Finding category by name: {}", categoryName);
         Category c = categoryRepository.findByNameIgnoreCase(categoryName)
                 .orElseThrow(() -> new EntityNotFoundException(
                     messageResolver.getMessage(
@@ -70,15 +80,22 @@ public class CategoryServiceImpl implements CategoryService {
                             "Category", categoryName
                     )
                 ));
-        return categoryMapper.fromEntityToResponse(c);
+
+        LOG.trace("Mapping Category entity to response DTO");
+        CategoryResponse response = categoryMapper.fromEntityToResponse(c);
+        LOG.trace("Exiting getByName with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public CategoryResponse create(CreateCategoryRequest dto) {
+        LOG.trace("Entering create with dto: {}", dto);
         String categoryName = dto.name().trim();
         LOG.info("Attempting to create Category \"{}\"", categoryName);
+        
+        LOG.trace("Checking if category already exists with name: {}", dto.name());
         Category c = categoryRepository.findByNameIgnoreCase(dto.name())
                 .orElseThrow(() -> {
                     String existsMessage = messageResolver.getMessage("entity.already-exists", "Category", categoryName);
@@ -86,15 +103,26 @@ public class CategoryServiceImpl implements CategoryService {
                     return new EntityExistsException(existsMessage);
                 });
 
-        Category saved = categoryRepository.save(categoryMapper.fromCreateRequestToEntity(dto));
-        return categoryMapper.fromEntityToResponse(saved);
+        LOG.trace("Mapping create request DTO to Category entity");
+        Category categoryEntity = categoryMapper.fromCreateRequestToEntity(dto);
+        
+        LOG.trace("Saving new category to repository");
+        Category saved = categoryRepository.save(categoryEntity);
+        
+        LOG.trace("Mapping saved Category entity to response DTO");
+        CategoryResponse response = categoryMapper.fromEntityToResponse(saved);
+        LOG.trace("Exiting create with response: {}", response);
+        return response;
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public GenericResponse delete(DeleteCategoryRequest dto) {
+        LOG.trace("Entering delete with dto: {}", dto);
         LOG.info("Attempting to delete Category \"{}\"", dto.name());
+        
+        LOG.trace("Finding category for deletion by name: {}", dto.name());
         Category c = categoryRepository.findByNameIgnoreCase(dto.name())
                 .orElseThrow(() -> {
                     String existsMessage = messageResolver.getMessage("entity.already-exists", "Category", dto.name());
@@ -102,9 +130,11 @@ public class CategoryServiceImpl implements CategoryService {
                     return new EntityExistsException(existsMessage);
                 });
 
+        LOG.trace("Deleting category from repository: {}", c.getName());
         categoryRepository.delete(c);
         String deleteMessage = messageResolver.getMessage("entity.delete.success", "Category", c.getName());
         LOG.debug(deleteMessage);
+        LOG.trace("Exiting delete with message: {}", deleteMessage);
         return new GenericResponse(deleteMessage);
     }
 }
